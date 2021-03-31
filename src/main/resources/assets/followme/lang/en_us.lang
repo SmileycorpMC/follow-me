@@ -1,0 +1,3 @@
+message.followme.follow=%e is now following you.
+message.followme.unfollow=%e is no longer following you.
+message.followme.followingplayer=%e is already following %p.
