@@ -21,6 +21,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
+import net.smileycorp.atlas.api.SimpleByteMessage;
+import net.smileycorp.atlas.api.util.DirectionUtils;
+
 @EventBusSubscriber(modid = ModDefinitions.modid)
 public class EventListener {
 	
@@ -29,7 +32,7 @@ public class EventListener {
 	public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
 		EntityPlayer player = event.player;
 		if (!player.world.isRemote) {
-			PacketHandler.NETWORK_INSTANCE.sendTo(new PacketHandler.MessageSyncClient(ConfigHandler.getPacketData()), (EntityPlayerMP) player);
+			PacketHandler.NETWORK_INSTANCE.sendTo(new SimpleByteMessage(ConfigHandler.getPacketData()), (EntityPlayerMP) player);
 		}
 	}
 	
@@ -47,7 +50,7 @@ public class EventListener {
 	public static void onUseItem(PlayerInteractEvent.RightClickItem event) {
 		World world = event.getEntity().world;
 		EntityPlayer player = event.getEntityPlayer();
-		Entity target = getPlayerFacing(world, player);
+		Entity target = DirectionUtils.getPlayerRayTrace(world, player, 4.5f).entityHit;
 		if (player.isSneaking() && target instanceof EntityLiving) {
 			if (processInteraction(world, player, (EntityLiving) target, event.getHand())) {
 				event.setCancellationResult(EnumActionResult.FAIL);
@@ -65,21 +68,6 @@ public class EventListener {
 		if (event.getItemStack().isEmpty() && player.isSneaking() && target instanceof EntityLiving) {
 			processInteraction(world, player, (EntityLiving) target, event.getHand());
 		}
-	}
-	
-	private static Entity getPlayerFacing(World world, EntityPlayer player) {
-		Vec3d eyepos = player.getPositionEyes(5);
-	    Vec3d lookangle = player.getLook(5);
-	    Vec3d lastVec = eyepos.addVector(lookangle.x, lookangle.y, lookangle.z);
-		for (int i = 0; i <18; i++) {
-			float reach = i/4f;
-		    Vec3d vec = eyepos.addVector(lookangle.x*reach, lookangle.y*reach, lookangle.z*reach);
-		    AxisAlignedBB AABB = new AxisAlignedBB(lastVec.x, lastVec.y, lastVec.z, vec.x, vec.y, vec.z);
-		    List<Entity> entities = world.getEntitiesWithinAABBExcludingEntity(player, AABB);
-		    if (!entities.isEmpty()) return entities.get(0);
-		    lastVec = vec;
-		}
-		return null;
 	}
 	
 	private static boolean processInteraction(World world, EntityPlayer player, EntityLiving entity, EnumHand hand) {	

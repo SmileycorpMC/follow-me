@@ -11,6 +11,7 @@ public class ModDefinitions {
 	public static final String modid = "followme";
 	public static final String name = "Follow Me";
 	public static final String version = "1.1.1";
+	public static final String dependencies = "required-after:atlaslib";
 	
 	public static ITextComponent getFollowText(String str, AIFollowPlayer task) {
 		ITextComponent result = new TextComponentString(I18n.translateToLocal("message.followme."+str)
