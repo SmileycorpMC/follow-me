@@ -76,7 +76,7 @@ public class EventListener {
 			//doesn't run for off hand
 			if (hand == EnumHand.MAIN_HAND) {
 				//cancels if the player is on a different team to the entity
-				if (!(entity.getTeam() == null && player.getTeam() == null)) {	
+				if (!(entity.getTeam() == null || player.getTeam() == null)) {	
 					if (!entity.getTeam().isSameTeam(player.getTeam())) {
 						return false;
 					}
