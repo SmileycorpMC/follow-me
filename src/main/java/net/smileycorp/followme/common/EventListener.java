@@ -1,7 +1,5 @@
 package net.smileycorp.followme.common;
 
-import java.util.List;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.ai.EntityAITasks;
@@ -10,17 +8,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
-import net.minecraftforge.fml.relauncher.Side;
-
 import net.smileycorp.atlas.api.SimpleByteMessage;
 import net.smileycorp.atlas.api.util.DirectionUtils;
 
@@ -36,7 +28,7 @@ public class EventListener {
 		}
 	}
 	
-	//activate when a player joins a server
+	//activate when a player leaves a server
 	@SubscribeEvent
 	public static void onPlayerLeave(PlayerEvent.PlayerLoggedOutEvent event) {
 		EntityPlayer player = event.player;

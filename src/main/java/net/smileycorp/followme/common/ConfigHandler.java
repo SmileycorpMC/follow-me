@@ -5,16 +5,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.ArrayUtils;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.util.ResourceLocation;
-
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.registries.GameData;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 public class ConfigHandler {
 	
@@ -65,7 +64,7 @@ public class ConfigHandler {
 						if (registeredEntities.isEmpty()) {
 							for (EntityEntry entry : GameData.getEntityRegistry().getValues()) {
 								//if we haven't already got all entity names stored get them to check against
-								registeredEntities.put(entry.getEntityClass().getSimpleName(), (Class<? extends Entity>) entry.getEntityClass());
+								registeredEntities.put(entry.getEntityClass().getSimpleName(), entry.getEntityClass());
 							}
 						} if (registeredEntities.containsKey(name)) {
 							clazz = registeredEntities.get(name);
@@ -103,7 +102,7 @@ public class ConfigHandler {
 	
 	public static byte[] getPacketData() {
 		byte[] bytes = {};
-		String data = "";
+		//String data = "";
 		for (Class<? extends EntityLiving> clazz : localEntityWhitelist) {
 			bytes = ArrayUtils.addAll(bytes, clazz.getName().getBytes());
 			bytes = ArrayUtils.addAll(bytes, ";".getBytes());

@@ -1,3 +1,3 @@
-message.followme.follow=%e is now following you.
-message.followme.unfollow=%e is no longer following you.
-message.followme.followingplayer=%e is already following %p.
+message.followme.follow=%1$s is now following you.
+message.followme.unfollow=%1$s is no longer following you.
+message.followme.followingplayer=%1$s is already following %2$s.

@@ -13,12 +13,14 @@ import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.smileycorp.atlas.api.util.DirectionUtils;
 
 public class AIFollowPlayer extends EntityAIBase {
 	
 	protected final float min = 10.0F;
-	protected final float max = 2.0F;
+	protected final float max = 4.0F;
 	protected final EntityLiving entity;
 	protected final EntityPlayer player;
 	protected final World world;
@@ -36,13 +38,13 @@ public class AIFollowPlayer extends EntityAIBase {
 
 	@Override
 	public boolean shouldExecute() {
-		return !(player.isSpectator() && entity.getDistanceSq(player) < (double)(this.min * this.min));
+		return !(player.isSpectator() && entity.getDistanceSq(player) < this.min * this.min);
 	}
 	
 	@Override
 	public boolean shouldContinueExecuting() {
 		if (super.shouldContinueExecuting()) {
-			if (this.entity.getNavigator().noPath() && this.entity.getDistanceSq(this.player) > (double)(this.max * this.max) && entity.getAttackTarget() != player && player.isAddedToWorld());
+			if (this.entity.getNavigator().noPath() && (this.entity.getDistanceSq(this.player) > this.max * this.max) && entity.getAttackTarget() != player && player.isAddedToWorld());
 			if (player.getTeam() != null || entity.getTeam() != null) {
 				if (player.getTeam().isSameTeam(entity.getTeam())) return true;
 			} else {
@@ -72,14 +74,16 @@ public class AIFollowPlayer extends EntityAIBase {
 	        if (!pather.tryMoveToEntityLiving(player, 0.75f)) {
 	            if (!entity.getLeashed() && !entity.isRiding()) {
 	                if (this.entity.getDistanceSq(player) >= 144.0D) {
-	                    int i = MathHelper.floor(player.posX) - 2;
-	                    int j = MathHelper.floor(player.posZ) - 2;
-	                    int k = MathHelper.floor(player.getEntityBoundingBox().minY);
+	                	Vec3d dir = DirectionUtils.getDirectionVecXZ(player.getPosition(), entity.getPosition());
+	                	
+	                    int x = (int) (Math.round(player.posX + 2*dir.x));
+	                    int y = MathHelper.floor(player.getEntityBoundingBox().minY);
+	                    int z = (int) (Math.round(player.posZ + 2*dir.z));
 	
 	                    for (int l = 0; l <= 4; ++l) {
 	                        for (int i1 = 0; i1 <= 4; ++i1) {
-	                            if ((l < 1 || i1 < 1 || l > 3 || i1 > 3) && this.isTeleportFriendlyBlock(i, j, k, l, i1)) {
-	                               entity.setLocationAndAngles((double)((float)(i + l) + 0.5F), (double)k, (double)((float)(j + i1) + 0.5F), entity.rotationYaw, entity.rotationPitch);
+	                            if ((l < 1 || i1 < 1 || l > 3 || i1 > 3) && this.isTeleportFriendlyBlock(x, z, y, l, i1)) {
+	                               entity.setLocationAndAngles(x + l + 0.5F, y, z + i1 + 0.5F, entity.rotationYaw, entity.rotationPitch);
 	                               pather.clearPath();
 	                               return;
 	                            }
