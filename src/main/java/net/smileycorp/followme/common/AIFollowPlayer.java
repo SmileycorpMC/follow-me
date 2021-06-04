@@ -45,7 +45,7 @@ public class AIFollowPlayer extends EntityAIBase {
 	public boolean shouldContinueExecuting() {
 		if (super.shouldContinueExecuting()) {
 			if (this.entity.getNavigator().noPath() && (this.entity.getDistanceSq(this.player) > this.max * this.max) && entity.getAttackTarget() != player && player.isAddedToWorld());
-			if (player.getTeam() != null || entity.getTeam() != null) {
+			if (player.getTeam() != null && entity.getTeam() != null) {
 				if (player.getTeam().isSameTeam(entity.getTeam())) return true;
 			} else {
 				return true;
