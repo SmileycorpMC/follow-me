@@ -62,7 +62,7 @@ public class EventListener {
 		}
 	}
 	
-	private static boolean processInteraction(World world, EntityPlayer player, EntityLiving entity, EnumHand hand) {	
+	public static boolean processInteraction(World world, EntityPlayer player, EntityLiving entity, EnumHand hand) {	
 		//checks if the entity is present in the config file
 		if (ConfigHandler.isInWhitelist(entity) && entity.getAttackTarget() != player) {
 			//doesn't run for off hand

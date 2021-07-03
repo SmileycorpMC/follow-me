@@ -3,14 +3,15 @@ package net.smileycorp.followme.common;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.relauncher.Side;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Mod(modid = ModDefinitions.modid, name = ModDefinitions.name, version = ModDefinitions.version, dependencies = ModDefinitions.dependencies)
 public class FollowMe {
@@ -23,6 +24,7 @@ public class FollowMe {
 		ConfigHandler.config = new Configuration(event.getSuggestedConfigurationFile());
 		ConfigHandler.syncConfig();
 		PacketHandler.initPackets();
+		if (event.getSide() == Side.CLIENT) ClientHandler.preInit();
 	}
 	
 	@EventHandler
