@@ -20,19 +20,22 @@ public class StopFollowMessage implements IMessage {
 	
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		PacketBuffer buffer = (PacketBuffer) buf;
-		if (player!=null)buffer.writeUniqueId(player);
+		try {
+			PacketBuffer buffer = (PacketBuffer) buf;
+			player = buffer.readUniqueId();
+		} catch (Exception e) {
+			FollowMe.logError(this.toString(), e);
+		}
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf) {
-		PacketBuffer buffer = (PacketBuffer) buf;
-		player = buffer.readUniqueId();
+		PacketBuffer buffer = new PacketBuffer(buf);
+		if (player!=null)buffer.writeUniqueId(player);
 	}
 	
 	public UUID getPlayerUUID() {
 		return player;
 	}
-
 
 }

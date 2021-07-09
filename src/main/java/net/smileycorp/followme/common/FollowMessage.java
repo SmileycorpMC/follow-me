@@ -6,8 +6,8 @@ import java.util.UUID;
 
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 public class FollowMessage implements IMessage {
@@ -24,16 +24,16 @@ public class FollowMessage implements IMessage {
 	
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		PacketBuffer buffer = (PacketBuffer) buf;
-		buffer.writeInt(entity);
-		if (player!=null)buffer.writeUniqueId(player);
+		if (buf.isReadable(2)) {
+			entity = buf.getInt(0);
+			player = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+		}
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf) {
-		PacketBuffer buffer = (PacketBuffer) buf;
-		entity = buffer.getInt(0);
-		player = buffer.readUniqueId();
+		buf.writeInt(entity);
+		if (player!=null)ByteBufUtils.writeUTF8String(buf, player.toString());
 	}
 	
 	public UUID getPlayerUUID() {
