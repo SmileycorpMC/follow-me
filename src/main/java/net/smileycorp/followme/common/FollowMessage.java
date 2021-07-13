@@ -9,6 +9,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.smileycorp.atlas.api.util.DataUtils;
 
 public class FollowMessage implements IMessage {
 
@@ -24,10 +25,9 @@ public class FollowMessage implements IMessage {
 	
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		if (buf.isReadable(2)) {
-			entity = buf.getInt(0);
-			player = UUID.fromString(ByteBufUtils.readUTF8String(buf));
-		}
+		entity = buf.readInt();
+		String uuid = ByteBufUtils.readUTF8String(buf);
+		if (DataUtils.isValidUUID(uuid)) player = UUID.fromString(uuid);
 	}
 
 	@Override
