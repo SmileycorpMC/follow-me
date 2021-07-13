@@ -5,9 +5,8 @@ import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.smileycorp.atlas.api.util.DataUtils;
 
 public class StopFollowMessage implements IMessage {
 
@@ -19,16 +18,20 @@ public class StopFollowMessage implements IMessage {
 		this.player = EntityPlayer.getUUID(player.getGameProfile());
 	}
 	
-
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		String uuid = ByteBufUtils.readUTF8String(buf);
-		if (DataUtils.isValidUUID(uuid)) player = UUID.fromString(uuid);
+		try {
+			PacketBuffer buffer = (PacketBuffer) buf;
+			player = buffer.readUniqueId();
+		} catch (Exception e) {
+			FollowMe.logError(this.toString(), e);
+		}
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf) {
-		if (player!=null)ByteBufUtils.writeUTF8String(buf, player.toString());
+		PacketBuffer buffer = new PacketBuffer(buf);
+		if (player!=null)buffer.writeUniqueId(player);
 	}
 	
 	public UUID getPlayerUUID() {
