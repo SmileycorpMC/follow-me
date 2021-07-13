@@ -3,7 +3,7 @@
   "modid": "followme",
   "name": "Follow Me",
   "description": "Allows a configurable list of entities to follow the player after a shift right-click.",
-  "version": "1.1.3",
+  "version": "1.1.3a",
   "mcversion": "1.12.2",
   "url": "",
   "updateUrl": "",
