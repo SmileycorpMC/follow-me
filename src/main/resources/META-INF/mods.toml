@@ -1,0 +1,13 @@
+modLoader="javafml" #mandatory
+loaderVersion="[34,)"
+license="GNU LESSER GENERAL PUBLIC LICENSE Version 2.1"
+
+[[mods]]
+modId="followme"
+version="1.1.3a"
+displayName="Follow Me"
+displayURL="https://www.curseforge.com/minecraft/mc-mods/follow-me"
+updateJSONURL=""
+credits="Smileycorp"
+authors="bstylia14 for the original mod concept and for providing ideas during development."
+description="Allows a configurable list of entities to follow the player after a shift right-click."

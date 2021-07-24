@@ -1,46 +1,44 @@
 package net.smileycorp.followme.common;
 
+import java.util.EnumSet;
 import java.util.concurrent.TimeUnit;
 
-import net.minecraft.block.state.BlockFaceShape;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.pathfinding.PathNavigate;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.pathfinding.PathNavigator;
 import net.minecraft.pathfinding.PathNodeType;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.pathfinding.WalkNodeProcessor;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.smileycorp.atlas.api.util.DirectionUtils;
 
-public class AIFollowPlayer extends EntityAIBase {
-	
+public class FollowPlayerGoal extends Goal {
+
 	protected final float min = 10.0F;
 	protected final float max = 4.0F;
-	protected final EntityLiving entity;
-	protected final EntityPlayer player;
+	protected final MobEntity entity;
+	protected final PlayerEntity player;
 	protected final World world;
-	protected final PathNavigate pather;
+	protected final PathNavigator pather;
 	protected float waterCost;
 	protected int timeToRecalcPath = 0;
-	
-	public AIFollowPlayer(EntityLiving entity, EntityPlayer player) {
+
+	public FollowPlayerGoal(MobEntity entity, PlayerEntity player) {
 		this.entity=entity;
 		this.player=player;
 		world=entity.world;
 		pather=entity.getNavigator();
-		setMutexBits(3);
+		setMutexFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
 	}
 
 	@Override
 	public boolean shouldExecute() {
 		return !(player.isSpectator() && entity.getDistanceSq(player) < this.min * this.min);
 	}
-	
+
 	@Override
 	public boolean shouldContinueExecuting() {
 		if (super.shouldContinueExecuting()) {
@@ -55,34 +53,34 @@ public class AIFollowPlayer extends EntityAIBase {
 		FollowMe.DELAYED_THREAD_EXECUTOR.schedule(() -> FollowMe.removeAI(this), 20, TimeUnit.MILLISECONDS);
 		return false;
     }
-	
+
 	@Override
 	public void startExecuting() {
 		waterCost = entity.getPathPriority(PathNodeType.WATER);
 	}
-	
+
 	@Override
 	public void resetTask() {
         pather.clearPath();
         entity.setPathPriority(PathNodeType.WATER, this.waterCost);
     }
-	
+
 	@Override
-	public void updateTask() {
+	public void tick() {
 	    if (--this.timeToRecalcPath <= 0)  {
 	        this.timeToRecalcPath = 5;
 	        if (!pather.tryMoveToEntityLiving(player, 0.75f)) {
-	            if (!entity.getLeashed() && !entity.isRiding()) {
+	            if (!entity.getLeashed() && entity.getRidingEntity() != null) {
 	                if (this.entity.getDistanceSq(player) >= 144.0D) {
-	                	Vec3d dir = DirectionUtils.getDirectionVecXZ(player.getPosition(), entity.getPosition());
-	                	
-	                    int x = (int) (Math.round(player.posX + 2*dir.x));
-	                    int y = MathHelper.floor(player.getEntityBoundingBox().minY);
-	                    int z = (int) (Math.round(player.posZ + 2*dir.z));
-	
+	                	Vector3d dir = DirectionUtils.getDirectionVecXZ(player.getPosition(), entity.getPosition());
+
+	                    int x = (int) (Math.round(player.getPosX() + 2*dir.x));
+	                    int y = MathHelper.floor(player.getBoundingBox().minY);
+	                    int z = (int) (Math.round(player.getPosZ() + 2*dir.z));
+
 	                    for (int l = 0; l <= 4; ++l) {
 	                        for (int i1 = 0; i1 <= 4; ++i1) {
-	                            if ((l < 1 || i1 < 1 || l > 3 || i1 > 3) && this.isTeleportFriendlyBlock(x, z, y, l, i1)) {
+	                            if ((l < 1 || i1 < 1 || l > 3 || i1 > 3) && this.isTeleportFriendlyBlock(new BlockPos(x, z, y))) {
 	                               entity.setLocationAndAngles(x + l + 0.5F, y, z + i1 + 0.5F, entity.rotationYaw, entity.rotationPitch);
 	                               pather.clearPath();
 	                               return;
@@ -94,17 +92,21 @@ public class AIFollowPlayer extends EntityAIBase {
 	        }
         }
     }
-	protected boolean isTeleportFriendlyBlock(int x, int p_192381_2_, int y, int p_192381_4_, int p_192381_5_) {
-        BlockPos blockpos = new BlockPos(x + p_192381_4_, y - 1, p_192381_2_ + p_192381_5_);
-        IBlockState iblockstate = world.getBlockState(blockpos);
-        return iblockstate.getBlockFaceShape(world, blockpos, EnumFacing.DOWN) == BlockFaceShape.SOLID && iblockstate.canEntitySpawn(entity) && world.isAirBlock(blockpos.up()) && world.isAirBlock(blockpos.up(2));
-    }
-	
-	public EntityPlayer getPlayer() {
+	private boolean isTeleportFriendlyBlock(BlockPos pos) {
+	      PathNodeType pathnodetype = WalkNodeProcessor.func_237231_a_(this.world, pos.toMutable());
+	      if (pathnodetype != PathNodeType.WALKABLE) {
+	         return false;
+	      } else {
+            BlockPos blockpos = pos.subtract(entity.getPosition());
+            return this.world.hasNoCollisions(entity, entity.getBoundingBox().offset(blockpos));
+	      }
+	}
+
+	public PlayerEntity getPlayer() {
 		return player;
 	}
 
-	public Entity getEntity() {
+	public MobEntity getEntity() {
 		return entity;
 	}
 }

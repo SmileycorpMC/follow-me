@@ -5,49 +5,49 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
-import net.minecraftforge.fml.common.registry.EntityEntry;
-import net.minecraftforge.registries.GameData;
+import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
+import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.IForgeRegistry;
 
 import org.apache.commons.lang3.ArrayUtils;
 
 public class ConfigHandler {
-	
-	static Configuration config;
-	protected static List<Class<? extends EntityLiving>> entityWhitelist = new ArrayList<Class<? extends EntityLiving>>();
-	protected final static List<Class<? extends EntityLiving>> localEntityWhitelist = new ArrayList<Class<? extends EntityLiving>>();
-	protected static Property entityWhitelistProp;
-	
-	//load config properties
-	public static void syncConfig() {
-		FollowMe.logInfo("Trying to load config");
-		try{
-			config.load();
-			entityWhitelistProp = config.get(Configuration.CATEGORY_GENERAL, "entityWhitelist",
-					new String[]{}, "Entities that follow the player after sneak right-clicked. (uses either classname e.g. EntityZombie or registry name e.g. minecraft:zombie)");
-		} catch(Exception e) {
-		} finally {
-	    	if (config.hasChanged()) config.save();
-		}
+
+	public static final ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+	public static final ForgeConfigSpec config;
+	protected static List<Class<? extends MobEntity>> entityWhitelist = new ArrayList<Class<? extends MobEntity>>();
+	protected static List<Class<? extends MobEntity>> localEntityWhitelist = null;
+
+	protected static ConfigValue<List<String>> entityWhitelistBuilder;
+
+	static {
+		builder.push("general");
+		List<String> defaultWhitelist = new ArrayList<String>();
+		entityWhitelistBuilder = builder.comment("Entities that follow the player after sneak right-clicked. (uses either classname e.g. ZombieEntity or registry name e.g. minecraft:zombie)")
+				.define("entityWhitelist", defaultWhitelist);
+		builder.pop();
+		config = builder.build();
 	}
-	
+
+	@SuppressWarnings("unchecked")
 	public static void initWhitelist() {
 		FollowMe.logInfo("Trying to read config");
+		localEntityWhitelist = new ArrayList<Class<? extends MobEntity>>();
 		try {
-			if (entityWhitelistProp.getStringList() == null) {
+			if (entityWhitelistBuilder == null) {
 				throw new Exception("Config has loaded as null");
 			}
-			else if (entityWhitelistProp.getStringList().length<=0) {
+			else if (entityWhitelistBuilder.get().size()<=0) {
 				throw new Exception("Value entityWhitelist in config is empty");
 			}
-			//stores all registered entities to check against
-			Map<String, Class<? extends Entity>> registeredEntities = new HashMap<String, Class<? extends Entity>>();
-			
-			for (String name : entityWhitelistProp.getStringList()) {
+			IForgeRegistry<EntityType<?>> entityRegistry = ForgeRegistries.ENTITIES;
+			Map<String, Class<? extends MobEntity>> registeredEntities = new HashMap<String, Class<? extends MobEntity>>();
+			for (String name : entityWhitelistBuilder.get()) {
 				//if we haven't already got all entity names stored get them to check against
 				try {
 					Class clazz;
@@ -55,16 +55,17 @@ public class ConfigHandler {
 					if (name.contains(":")) {
 						String[] nameSplit = name.split(":");
 						ResourceLocation loc = new ResourceLocation(nameSplit[0], nameSplit[1]);
-						if (GameData.getEntityRegistry().containsKey(loc)) {
-							clazz = GameData.getEntityRegistry().getValue(loc).getEntityClass();
+						if (entityRegistry.containsKey(loc)) {
+							clazz = getClass(entityRegistry.getValue(loc));
 						} else {
 							throw new Exception("Entity " + name + " is not registered");
 						}
 					} else { //assume its a class name
 						if (registeredEntities.isEmpty()) {
-							for (EntityEntry entry : GameData.getEntityRegistry().getValues()) {
+							for (EntityType<?> entry : entityRegistry) {
 								//if we haven't already got all entity names stored get them to check against
-								registeredEntities.put(entry.getEntityClass().getSimpleName(), entry.getEntityClass());
+								Class eclazz = getClass(entry);
+								registeredEntities.put(eclazz.getSimpleName(), eclazz);
 							}
 						} if (registeredEntities.containsKey(name)) {
 							clazz = registeredEntities.get(name);
@@ -72,8 +73,8 @@ public class ConfigHandler {
 							throw new Exception("Entity " + name + " is not registered");
 						}
 					}
-					//check if the entity is 
-					if (EntityLiving.class.isAssignableFrom(clazz)) {
+					//check if the entity is
+					if (MobEntity.class.isAssignableFrom(clazz)) {
 						localEntityWhitelist.add(clazz);
 						FollowMe.logInfo("Loaded entity " + name + " as " + clazz.getName());
 					} else {
@@ -87,31 +88,39 @@ public class ConfigHandler {
 			FollowMe.logError("Failed to read config, " + e.getCause() + " " + e.getMessage(), e);
 		}
 	}
-	public static boolean isInWhitelist(EntityLiving entity) {
+	private static Class<?> getClass(EntityType<?> value) throws Exception {
+		return value.create(ServerLifecycleHooks.getCurrentServer().func_241755_D_()).getClass();
+	}
+
+	public static boolean isInWhitelist(MobEntity entity) {
 		if (entity.world.isRemote) {
-			for (Class<? extends EntityLiving> clazz : entityWhitelist) {
+			for (Class<? extends MobEntity> clazz : entityWhitelist) {
 				if (clazz.isAssignableFrom(entity.getClass())) return true;
 			}
 		} else {
-			for (Class<? extends EntityLiving> clazz : localEntityWhitelist) {
+			for (Class<? extends MobEntity> clazz : getLocalWhitelist()) {
 				if (clazz.isAssignableFrom(entity.getClass())) return true;
 			}
 		}
 		return false;
 	}
-	
+
 	public static byte[] getPacketData() {
 		byte[] bytes = {};
 		//String data = "";
-		for (Class<? extends EntityLiving> clazz : localEntityWhitelist) {
+		for (Class<? extends MobEntity> clazz : getLocalWhitelist()) {
 			bytes = ArrayUtils.addAll(bytes, clazz.getName().getBytes());
 			bytes = ArrayUtils.addAll(bytes, ";".getBytes());
 		}
 		return bytes;
 	}
 
-	public static void syncClient(byte[] data) {
-		List<Class<? extends EntityLiving>> whitelist = new ArrayList<Class<? extends EntityLiving>>();
+	private static List<Class<? extends MobEntity>> getLocalWhitelist() {
+		if (localEntityWhitelist == null) initWhitelist();
+		return localEntityWhitelist;
+	}
+	public static boolean syncClient(byte[] data) {
+		List<Class<? extends MobEntity>> whitelist = new ArrayList<Class<? extends MobEntity>>();
 		//clean byte data of empty bytes
 		byte[] bytes = {};
 		for (byte b : data) {
@@ -127,10 +136,11 @@ public class ConfigHandler {
 			}
 		}
 		entityWhitelist = whitelist;
+		return true;
 	}
 
 	public static void resetConfigSync() {
-		entityWhitelist = new ArrayList<Class<? extends EntityLiving>>();
-	}	
-	
+		entityWhitelist = new ArrayList<Class<? extends MobEntity>>();
+	}
+
 }
