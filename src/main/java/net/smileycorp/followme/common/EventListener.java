@@ -15,6 +15,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.smileycorp.atlas.api.SimpleByteMessage;
 import net.smileycorp.atlas.api.util.DirectionUtils;
+import net.smileycorp.followme.common.network.FollowSyncMessage;
+import net.smileycorp.followme.common.network.PacketHandler;
 
 @EventBusSubscriber(modid = ModDefinitions.modid)
 public class EventListener {
@@ -26,16 +28,7 @@ public class EventListener {
 		if (!player.world.isRemote) {
 			PacketHandler.NETWORK_INSTANCE.sendTo(new SimpleByteMessage(ConfigHandler.getPacketData()), (EntityPlayerMP) player);
 		}
-	}
-	
-	//activate when a player leaves a server
-	@SubscribeEvent
-	public static void onPlayerLeave(PlayerEvent.PlayerLoggedOutEvent event) {
-		EntityPlayer player = event.player;
-		if (player.world.isRemote) {
-			ConfigHandler.resetConfigSync();
-		}
-	}
+	}	
 	
 	//activate when a player right clicks with an item
 	@SubscribeEvent
@@ -81,20 +74,18 @@ public class EventListener {
 					for (EntityAITaskEntry ai : tasks.taskEntries) {
 						if (ai.action instanceof AIFollowPlayer) {
 							AIFollowPlayer task = (AIFollowPlayer) ai.action;
-							if (task.getPlayer() != player) {
-								player.sendMessage(ModDefinitions.getFollowText("followingplayer", task));
-							} else {
-								tasks.removeTask(task);
-								player.sendMessage(ModDefinitions.getFollowText("unfollow", task));
-							}
+							FollowMe.removeAI(task);
 							hasTask = true;
+							break;
 						}
 					}
 					//entity is not following presently
 					if (!hasTask) {
 						AIFollowPlayer task = new AIFollowPlayer(entity, player);
 						tasks.addTask(0, task);
-						player.sendMessage(ModDefinitions.getFollowText("follow", task));
+						if (player instanceof EntityPlayerMP) {
+							PacketHandler.NETWORK_INSTANCE.sendTo(new FollowSyncMessage(entity, false), (EntityPlayerMP) player);
+						}
 					}
 				}
 				return true;

@@ -1,4 +1,4 @@
-package net.smileycorp.followme.common;
+package net.smileycorp.followme.common.network;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLiving;
@@ -14,6 +14,12 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.smileycorp.atlas.api.SimpleByteMessage;
+import net.smileycorp.followme.client.ClientHandler;
+import net.smileycorp.followme.common.AIFollowPlayer;
+import net.smileycorp.followme.common.ConfigHandler;
+import net.smileycorp.followme.common.EventListener;
+import net.smileycorp.followme.common.FollowMe;
+import net.smileycorp.followme.common.ModDefinitions;
 
 import com.google.common.base.Predicate;
 
@@ -25,6 +31,7 @@ public class PacketHandler {
 		NETWORK_INSTANCE.registerMessage(ConfigSyncHandler.class, SimpleByteMessage.class, 0, Side.CLIENT);
 		NETWORK_INSTANCE.registerMessage(FollowHandler.class, FollowMessage.class, 1, Side.SERVER);
 		NETWORK_INSTANCE.registerMessage(StopFollowHandler.class, StopFollowMessage.class, 2, Side.SERVER);
+		NETWORK_INSTANCE.registerMessage(FollowSyncHandler.class, FollowSyncMessage.class, 3, Side.CLIENT);
 	}
 	
 	public static class ConfigSyncHandler implements IMessageHandler<SimpleByteMessage, IMessage> {
@@ -81,6 +88,26 @@ public class PacketHandler {
 								}
 							}
 						}
+					}
+				});
+			}
+			return null;
+		}
+	}
+	
+	public static class FollowSyncHandler implements IMessageHandler<FollowSyncMessage, IMessage> {
+
+		public FollowSyncHandler() {}
+
+		@Override
+		public IMessage onMessage(FollowSyncMessage message, MessageContext ctx) {
+			if (ctx.side == Side.CLIENT) {
+				Minecraft mc = Minecraft.getMinecraft();
+				mc.addScheduledTask(() -> {
+					if (message.isUnfollow()) {
+						ClientHandler.FOLLOW_ENTITIES.remove(message.getEntity(mc.world));
+					} else {
+						ClientHandler.FOLLOW_ENTITIES.add(message.getEntity(mc.world));
 					}
 				});
 			}

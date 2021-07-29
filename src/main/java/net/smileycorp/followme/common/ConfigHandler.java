@@ -28,7 +28,7 @@ public class ConfigHandler {
 		try{
 			config.load();
 			entityWhitelistProp = config.get(Configuration.CATEGORY_GENERAL, "entityWhitelist",
-					new String[]{}, "Entities that follow the player after sneak right-clicked. (uses either classname e.g. EntityZombie or registry name e.g. minecraft:zombie)");
+					new String[]{}, "(Serverside) Entities that follow the player after sneak right-clicked. (uses either classname e.g. EntityZombie or registry name e.g. minecraft:zombie)");
 		} catch(Exception e) {
 		} finally {
 	    	if (config.hasChanged()) config.save();
@@ -130,7 +130,7 @@ public class ConfigHandler {
 	}
 
 	public static void resetConfigSync() {
-		entityWhitelist = new ArrayList<Class<? extends EntityLiving>>();
+		entityWhitelist.clear();
 	}	
 	
 }

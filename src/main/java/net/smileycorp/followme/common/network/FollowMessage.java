@@ -1,4 +1,4 @@
-package net.smileycorp.followme.common;
+package net.smileycorp.followme.common.network;
 
 import io.netty.buffer.ByteBuf;
 
