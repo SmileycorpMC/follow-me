@@ -74,9 +74,11 @@ public class EventListener {
 					for (EntityAITaskEntry ai : tasks.taskEntries) {
 						if (ai.action instanceof AIFollowPlayer) {
 							AIFollowPlayer task = (AIFollowPlayer) ai.action;
-							FollowMe.removeAI(task);
-							hasTask = true;
-							break;
+							if (task.getPlayer() == player) {
+								FollowMe.removeAI(task);
+								hasTask = true;
+								break;
+							}
 						}
 					}
 					//entity is not following presently

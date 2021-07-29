@@ -9,7 +9,7 @@ public class ModDefinitions {
 	
 	public static final String modid = "followme";
 	public static final String name = "Follow Me";
-	public static final String version = "1.1.4";
+	public static final String version = "1.1.4a";
 	public static final String dependencies = "required-after:atlaslib@1.1.3d;";
 	
 	public static ITextComponent getFollowText(String str, AIFollowPlayer task) {
