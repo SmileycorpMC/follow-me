@@ -3,12 +3,20 @@ package net.smileycorp.followme.common;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.goal.PrioritizedGoal;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.network.NetworkDirection;
+import net.smileycorp.followme.client.ClientHandler;
+import net.smileycorp.followme.common.network.FollowSyncMessage;
+import net.smileycorp.followme.common.network.PacketHandler;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +35,7 @@ public class FollowMe {
 	@SubscribeEvent
 	public static void clientSetup(FMLClientSetupEvent event){
 		ClientHandler.init();
+		MinecraftForge.EVENT_BUS.register(new ClientHandler());
 	}
 
 	@SubscribeEvent
@@ -44,8 +53,22 @@ public class FollowMe {
 	}
 
 	public static void removeAI(FollowPlayerGoal ai) {
-		ai.player.sendMessage(ModDefinitions.getFollowText("unfollow", ai), null);
-		ai.entity.goalSelector.removeGoal(ai);
+		MobEntity entity = ai.entity;
+		ai.resetTask();
+		entity.goalSelector.removeGoal(ai);
+		for (PrioritizedGoal entry : entity.goalSelector.getRunningGoals().toArray(PrioritizedGoal[]::new)) {
+			if (entry.isRunning()) {
+				entry.getGoal().resetTask();
+			}
+		}
+		for (PrioritizedGoal entry : entity.targetSelector.getRunningGoals().toArray(PrioritizedGoal[]::new)) {
+			if (entry.isRunning()) {
+				entry.getGoal().resetTask();
+			}
+		}
+		if (ai.player instanceof ServerPlayerEntity) {
+			PacketHandler.NETWORK_INSTANCE.sendTo(new FollowSyncMessage(entity, true), ((ServerPlayerEntity)ai.player).connection.getNetworkManager(), NetworkDirection.PLAY_TO_CLIENT);
+		}
 	}
 
 }

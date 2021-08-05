@@ -1,9 +1,5 @@
 package net.smileycorp.followme.common;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.Consumer;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.GoalSelector;
@@ -22,6 +18,8 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.network.NetworkDirection;
 import net.smileycorp.atlas.api.network.SimpleByteMessage;
 import net.smileycorp.atlas.api.util.DirectionUtils;
+import net.smileycorp.followme.common.network.FollowSyncMessage;
+import net.smileycorp.followme.common.network.PacketHandler;
 
 @EventBusSubscriber(modid = ModDefinitions.MODID)
 public class EventListener {
@@ -32,15 +30,6 @@ public class EventListener {
 		PlayerEntity player = event.getPlayer();
 		if (!player.world.isRemote) {
 			PacketHandler.NETWORK_INSTANCE.sendTo(new SimpleByteMessage(ConfigHandler.getPacketData()), ((ServerPlayerEntity)player).connection.getNetworkManager(), NetworkDirection.PLAY_TO_CLIENT);
-		}
-	}
-
-	//activate when a player leaves a server
-	@SubscribeEvent
-	public static void onPlayerLeave(PlayerEvent.PlayerLoggedOutEvent event) {
-		PlayerEntity player = event.getPlayer();
-		if (player.world.isRemote) {
-			ConfigHandler.resetConfigSync();
 		}
 	}
 
@@ -85,27 +74,24 @@ public class EventListener {
 				}
 				//modify the entity behaviour on the server
 				if (!world.isRemote) {
+					boolean hasGoal = false;
 					GoalSelector tasks = entity.goalSelector;
-					Set<FollowPlayerGoal> follow_goals = new HashSet<FollowPlayerGoal>();
-					tasks.getRunningGoals().iterator().forEachRemaining(new Consumer<PrioritizedGoal>(){
-						@Override
-						public void accept(PrioritizedGoal ai) {
-							if (ai.getGoal() instanceof FollowPlayerGoal) {
-								FollowPlayerGoal task = (FollowPlayerGoal) ai.getGoal();
-								if (task.getPlayer() != player) {
-									player.sendStatusMessage(ModDefinitions.getFollowText("followingplayer", task), true);
-								} else {
-									tasks.removeGoal(task);
-									player.sendStatusMessage(ModDefinitions.getFollowText("unfollow", task), true);
-								}
-								follow_goals.add(task);
+					for (PrioritizedGoal entry : entity.goalSelector.getRunningGoals().toArray(PrioritizedGoal[]::new)) {
+						if (entry.getGoal() instanceof FollowPlayerGoal) {
+							FollowPlayerGoal task = (FollowPlayerGoal) entry.getGoal();
+							if (task.getPlayer() == player) {
+								FollowMe.removeAI(task);
 							}
-						}});;
-					//entity is not following currently
-					if (follow_goals.isEmpty()) {
+							hasGoal= true;
+							break;
+						}
+					};
+					if (!hasGoal) {
 						FollowPlayerGoal task = new FollowPlayerGoal(entity, player);
 						tasks.addGoal(0, task);
-						player.sendStatusMessage(ModDefinitions.getFollowText("follow", task), true);
+						if (player instanceof ServerPlayerEntity) {
+							PacketHandler.NETWORK_INSTANCE.sendTo(new FollowSyncMessage(entity, false), ((ServerPlayerEntity)player).connection.getNetworkManager(), NetworkDirection.PLAY_TO_CLIENT);
+						}
 					}
 				}
 				return true;

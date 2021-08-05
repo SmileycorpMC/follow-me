@@ -140,7 +140,7 @@ public class ConfigHandler {
 	}
 
 	public static void resetConfigSync() {
-		entityWhitelist = new ArrayList<Class<? extends MobEntity>>();
+		entityWhitelist.clear();
 	}
 
 }

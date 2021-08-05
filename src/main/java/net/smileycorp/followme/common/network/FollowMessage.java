@@ -1,4 +1,4 @@
-package net.smileycorp.followme.common;
+package net.smileycorp.followme.common.network;
 
 import java.io.IOException;
 import java.util.UUID;
