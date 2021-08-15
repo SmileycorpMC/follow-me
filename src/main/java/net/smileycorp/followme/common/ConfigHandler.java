@@ -28,7 +28,7 @@ public class ConfigHandler {
 	static {
 		builder.push("general");
 		List<String> defaultWhitelist = new ArrayList<String>();
-		entityWhitelistBuilder = builder.comment("Entities that follow the player after sneak right-clicked. (uses either classname e.g. ZombieEntity or registry name e.g. minecraft:zombie)")
+		entityWhitelistBuilder = builder.comment("Entities that follow the player after sneak right-clicked. (uses the string format and either classname e.g. \"VillagerEntity\" or registry name e.g. \"minecraft:villager\")")
 				.define("entityWhitelist", defaultWhitelist);
 		builder.pop();
 		config = builder.build();

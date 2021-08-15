@@ -1,6 +1,5 @@
 package net.smileycorp.followme.common.network;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.PrioritizedGoal;
@@ -41,7 +40,7 @@ public class PacketHandler {
 	}
 
 	public static void processSyncMessage(SimpleByteMessage message, Context ctx) {
-		ctx.enqueueWork(() ->  DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ConfigHandler.syncClient(message.getData())));
+		ctx.enqueueWork(() ->  DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> () -> ConfigHandler.syncClient(message.getData())));
 		ctx.setPacketHandled(true);
 	}
 
@@ -73,15 +72,7 @@ public class PacketHandler {
 	}
 
 	public static void processFollowSyncMessage(FollowSyncMessage message, Context ctx) {
-		ctx.enqueueWork(() ->  DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-			Minecraft mc = Minecraft.getInstance();
-			MobEntity entity = message.getEntity(mc.world);
-			if (message.isUnfollow()) {
-				ClientHandler.FOLLOW_ENTITIES.remove(entity);
-			} else {
-				ClientHandler.FOLLOW_ENTITIES.add(entity);
-			}
-		}));
+		ctx.enqueueWork(() ->  DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> () -> ClientHandler.syncFollowEntities(message)));
 		ctx.setPacketHandled(true);
 	}
 }

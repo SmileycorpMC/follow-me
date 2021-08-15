@@ -1,12 +1,10 @@
 package net.smileycorp.followme.client;
 
 import java.awt.event.KeyEvent;
-import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
@@ -16,7 +14,6 @@ import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.Color;
 import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
@@ -28,12 +25,12 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.smileycorp.atlas.api.util.DirectionUtils;
 import net.smileycorp.followme.common.ConfigHandler;
 import net.smileycorp.followme.common.FollowMe;
 import net.smileycorp.followme.common.ModDefinitions;
 import net.smileycorp.followme.common.network.FollowMessage;
+import net.smileycorp.followme.common.network.FollowSyncMessage;
 import net.smileycorp.followme.common.network.PacketHandler;
 import net.smileycorp.followme.common.network.StopFollowMessage;
 
@@ -84,7 +81,9 @@ public class ClientHandler {
 		}
 	}
 
+
 	@SubscribeEvent
+	@SuppressWarnings("unchecked")
 	public void renderLiving(RenderNameplateEvent event) {
 		if (event.getEntity() instanceof MobEntity) {
 			MobEntity entity = (MobEntity) event.getEntity();
@@ -92,21 +91,26 @@ public class ClientHandler {
 				Minecraft mc = Minecraft.getInstance();
 				PlayerEntity player = mc.player;
 				if (player!=null) {
-					EntityRenderer<?> renderer = event.getEntityRenderer();
-					try {
-						MatrixStack matrix = event.getMatrixStack();
-						matrix.push();
-						matrix.translate(0, -0.2f, 0);
-						Method m = ObfuscationReflectionHelper.findMethod(EntityRenderer.class, "func_225629_a_", Entity.class, ITextComponent.class, MatrixStack.class, IRenderTypeBuffer.class, int.class);
-						IFormattableTextComponent text = new TranslationTextComponent("text.followme.following");
-						text.setStyle(Style.EMPTY.setColor(Color.fromInt(0x00FF21)));
-						m.invoke(renderer, entity, text, matrix, event.getRenderTypeBuffer(), event.getPackedLight());
-						matrix.pop();
-					} catch (Exception e) {
-						FollowMe.logError(e.getCause(), e);
-					}
+					EntityRenderer<MobEntity> renderer = (EntityRenderer<MobEntity>) event.getEntityRenderer();
+					MatrixStack matrix = event.getMatrixStack();
+					matrix.push();
+					matrix.translate(0, -0.2f, 0);
+					IFormattableTextComponent text = new TranslationTextComponent("text.followme.following");
+					text.setStyle(Style.EMPTY.setColor(Color.fromInt(0x00FF21)));
+					renderer.renderName(entity, text, matrix, event.getRenderTypeBuffer(), event.getPackedLight());
+					matrix.pop();
 				}
 			}
+		}
+	}
+
+	public static void syncFollowEntities(FollowSyncMessage message) {
+		Minecraft mc = Minecraft.getInstance();
+		MobEntity entity = message.getEntity(mc.world);
+		if (message.isUnfollow()) {
+			ClientHandler.FOLLOW_ENTITIES.remove(entity);
+		} else {
+			ClientHandler.FOLLOW_ENTITIES.add(entity);
 		}
 	}
 
