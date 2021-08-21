@@ -40,6 +40,7 @@ public class FollowMe {
 
 	@SubscribeEvent
 	public static void setup(FMLCommonSetupEvent event){
+		MinecraftForge.EVENT_BUS.register(new EventListener());
 		PacketHandler.initPackets();
 	}
 

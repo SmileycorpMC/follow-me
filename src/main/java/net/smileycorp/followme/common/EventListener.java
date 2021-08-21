@@ -11,6 +11,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
+import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -18,6 +19,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.network.NetworkDirection;
 import net.smileycorp.atlas.api.network.SimpleByteMessage;
 import net.smileycorp.atlas.api.util.DirectionUtils;
+import net.smileycorp.followme.common.data.DataLoader;
 import net.smileycorp.followme.common.network.FollowSyncMessage;
 import net.smileycorp.followme.common.network.PacketHandler;
 
@@ -61,11 +63,16 @@ public class EventListener {
 		}
 	}
 
+	@SubscribeEvent
+	private void addResourceReload(AddReloadListenerEvent event ) {
+		event.addListener(new DataLoader());
+	}
+
 	public static boolean processInteraction(World world, PlayerEntity player, MobEntity entity, Hand hand) {
 		//checks if the entity is present in the config file
-		if (ConfigHandler.isInWhitelist(entity) && entity.getAttackTarget() != player) {
+		if ((ConfigHandler.isInWhitelist(entity)) && entity.getAttackTarget() != player) {
 			//doesn't run for off hand
-			if (hand == Hand.MAIN_HAND) {
+			if (hand == Hand.MAIN_HAND && DataLoader.matches(entity, player)) {
 				//cancels if the player is on a different team to the entity
 				if (!(entity.getTeam() == null || player.getTeam() == null)) {
 					if (!entity.getTeam().isSameTeam(player.getTeam())) {

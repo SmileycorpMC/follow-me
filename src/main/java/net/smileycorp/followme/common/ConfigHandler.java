@@ -88,7 +88,7 @@ public class ConfigHandler {
 			FollowMe.logError("Failed to read config, " + e.getCause() + " " + e.getMessage(), e);
 		}
 	}
-	private static Class<?> getClass(EntityType<?> value) throws Exception {
+	public static Class<?> getClass(EntityType<?> value) throws Exception {
 		return value.create(ServerLifecycleHooks.getCurrentServer().func_241755_D_()).getClass();
 	}
 
