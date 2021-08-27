@@ -1,6 +1,5 @@
 package net.smileycorp.followme.common;
 
-import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -14,7 +13,6 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.network.NetworkDirection;
 import net.smileycorp.atlas.api.network.SimpleByteMessage;
 import net.smileycorp.followme.common.data.DataLoader;
-import net.smileycorp.followme.common.event.FollowPlayerEvent;
 import net.smileycorp.followme.common.network.PacketHandler;
 
 @EventBusSubscriber(modid = ModDefinitions.MODID)
@@ -43,15 +41,6 @@ public class EventListener {
 	@SubscribeEvent
 	public void addResourceReload(AddReloadListenerEvent event ) {
 		event.addListener(new DataLoader());
-	}
-
-	@SubscribeEvent
-	public void followEvent(FollowPlayerEvent event) {
-		if (event.getEntityLiving() instanceof AgeableEntity) {
-			if (((AgeableEntity)event.getEntityLiving()).isBaby()) {
-				event.conditions.clear();
-			}
-		}
 	}
 
 }

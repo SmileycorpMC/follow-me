@@ -32,6 +32,7 @@ import net.smileycorp.atlas.api.util.DirectionUtils;
 import net.smileycorp.followme.common.CommonConfigHandler;
 import net.smileycorp.followme.common.FollowMe;
 import net.smileycorp.followme.common.ModDefinitions;
+import net.smileycorp.followme.common.network.DenyFollowMessage;
 import net.smileycorp.followme.common.network.FollowMessage;
 import net.smileycorp.followme.common.network.FollowSyncMessage;
 import net.smileycorp.followme.common.network.PacketHandler;
@@ -117,8 +118,9 @@ public class ClientHandler {
 		}
 	}
 
-	public static void processEntityDeny(MobEntity entity) {
-		World world = entity.level;
+	public static void processEntityDeny(DenyFollowMessage message) {
+		World world = Minecraft.getInstance().level;
+		MobEntity entity = message.getEntity(world);
 		Random rand = world.random;
 		for (int i = 0; i<6; i++) {
 			world.addParticle(ParticleTypes.ANGRY_VILLAGER, entity.getX()+rand.nextFloat(), entity.getY()+(entity.getBbHeight()/2f)+rand.nextFloat(), entity.getZ()+rand.nextFloat(),0, 0.3f, 0);
