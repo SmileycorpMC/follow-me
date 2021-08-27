@@ -16,14 +16,16 @@ import net.minecraftforge.registries.IForgeRegistry;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-public class ConfigHandler {
+public class CommonConfigHandler {
 
 	public static final ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
 	public static final ForgeConfigSpec config;
-	protected static List<Class<? extends MobEntity>> entityWhitelist = new ArrayList<Class<? extends MobEntity>>();
-	protected static List<Class<? extends MobEntity>> localEntityWhitelist = null;
+	protected static List<EntityType<?>> entityWhitelist = new ArrayList<EntityType<?>>();
+	protected static List<EntityType<?>> localEntityWhitelist = null;
 
 	protected static ConfigValue<List<String>> entityWhitelistBuilder;
+
+	private static IForgeRegistry<EntityType<?>> entityRegistry = ForgeRegistries.ENTITIES;
 
 	static {
 		builder.push("general");
@@ -34,10 +36,9 @@ public class ConfigHandler {
 		config = builder.build();
 	}
 
-	@SuppressWarnings("unchecked")
 	public static void initWhitelist() {
 		FollowMe.logInfo("Trying to read config");
-		localEntityWhitelist = new ArrayList<Class<? extends MobEntity>>();
+		localEntityWhitelist = new ArrayList<EntityType<?>>();
 		try {
 			if (entityWhitelistBuilder == null) {
 				throw new Exception("Config has loaded as null");
@@ -45,18 +46,17 @@ public class ConfigHandler {
 			else if (entityWhitelistBuilder.get().size()<=0) {
 				throw new Exception("Value entityWhitelist in config is empty");
 			}
-			IForgeRegistry<EntityType<?>> entityRegistry = ForgeRegistries.ENTITIES;
-			Map<String, Class<? extends MobEntity>> registeredEntities = new HashMap<String, Class<? extends MobEntity>>();
+			Map<String, EntityType<?>> registeredEntities = new HashMap<String, EntityType<?>>();
 			for (String name : entityWhitelistBuilder.get()) {
 				//if we haven't already got all entity names stored get them to check against
 				try {
-					Class clazz;
+					EntityType<?> type;
 					//check if it matches they syntax for a registry name
 					if (name.contains(":")) {
 						String[] nameSplit = name.split(":");
 						ResourceLocation loc = new ResourceLocation(nameSplit[0], nameSplit[1]);
 						if (entityRegistry.containsKey(loc)) {
-							clazz = getClass(entityRegistry.getValue(loc));
+							type = entityRegistry.getValue(loc);
 						} else {
 							throw new Exception("Entity " + name + " is not registered");
 						}
@@ -64,22 +64,18 @@ public class ConfigHandler {
 						if (registeredEntities.isEmpty()) {
 							for (EntityType<?> entry : entityRegistry) {
 								//if we haven't already got all entity names stored get them to check against
-								Class eclazz = getClass(entry);
-								registeredEntities.put(eclazz.getSimpleName(), eclazz);
+								Class<? extends MobEntity> eclazz = getClass(entry);
+								registeredEntities.put(eclazz.getSimpleName(), entry);
 							}
 						} if (registeredEntities.containsKey(name)) {
-							clazz = registeredEntities.get(name);
+							type = registeredEntities.get(name);
 						} else {
 							throw new Exception("Entity " + name + " is not registered");
 						}
 					}
 					//check if the entity is
-					if (MobEntity.class.isAssignableFrom(clazz)) {
-						localEntityWhitelist.add(clazz);
-						FollowMe.logInfo("Loaded entity " + name + " as " + clazz.getName());
-					} else {
-						throw new Exception("Entity " + name + " is not an instance of EntityLiving");
-					}
+					localEntityWhitelist.add(type);
+					FollowMe.logInfo("Loaded entity " + name + " as " + type.getDescriptionId());
 				} catch (Exception e) {
 					FollowMe.logError("Error adding entity " + name + " " + e.getCause() + " " + e.getMessage(), e);
 				}
@@ -88,19 +84,17 @@ public class ConfigHandler {
 			FollowMe.logError("Failed to read config, " + e.getCause() + " " + e.getMessage(), e);
 		}
 	}
-	public static Class<?> getClass(EntityType<?> value) throws Exception {
-		return value.create(ServerLifecycleHooks.getCurrentServer().func_241755_D_()).getClass();
+
+	@SuppressWarnings("unchecked")
+	public static Class<? extends MobEntity> getClass(EntityType<?> value) throws Exception {
+		return (Class<? extends MobEntity>) value.create(ServerLifecycleHooks.getCurrentServer().overworld()).getClass();
 	}
 
 	public static boolean isInWhitelist(MobEntity entity) {
-		if (entity.world.isRemote) {
-			for (Class<? extends MobEntity> clazz : entityWhitelist) {
-				if (clazz.isAssignableFrom(entity.getClass())) return true;
-			}
+		if (entity.level.isClientSide) {
+			if (entityWhitelist.contains(entity.getType())) return true;
 		} else {
-			for (Class<? extends MobEntity> clazz : getLocalWhitelist()) {
-				if (clazz.isAssignableFrom(entity.getClass())) return true;
-			}
+			if (getLocalWhitelist().contains(entity.getType())) return true;
 		}
 		return false;
 	}
@@ -108,19 +102,19 @@ public class ConfigHandler {
 	public static byte[] getPacketData() {
 		byte[] bytes = {};
 		//String data = "";
-		for (Class<? extends MobEntity> clazz : getLocalWhitelist()) {
-			bytes = ArrayUtils.addAll(bytes, clazz.getName().getBytes());
+		for (EntityType<?> type : getLocalWhitelist()) {
+			bytes = ArrayUtils.addAll(bytes, entityRegistry.getKey(type).toString().getBytes());
 			bytes = ArrayUtils.addAll(bytes, ";".getBytes());
 		}
 		return bytes;
 	}
 
-	private static List<Class<? extends MobEntity>> getLocalWhitelist() {
+	private static List<EntityType<?>> getLocalWhitelist() {
 		if (localEntityWhitelist == null) initWhitelist();
 		return localEntityWhitelist;
 	}
 	public static boolean syncClient(byte[] data) {
-		List<Class<? extends MobEntity>> whitelist = new ArrayList<Class<? extends MobEntity>>();
+		List<EntityType<?>> whitelist = new ArrayList<EntityType<?>>();
 		//clean byte data of empty bytes
 		byte[] bytes = {};
 		for (byte b : data) {
@@ -128,8 +122,8 @@ public class ConfigHandler {
 		}
 		for (String name : new String(bytes).split(";")) {
 			try {
-				Class clazz = Class.forName(name);
-				whitelist.add(clazz);
+				EntityType<?> type = entityRegistry.getValue(new ResourceLocation(name));
+				whitelist.add(type);
 				FollowMe.logInfo("Synced config entity " + name + " from server");
 			} catch(Exception e) {
 				FollowMe.logError("Failed to sync config entity " + name + " from server " + e.getCause(), e);

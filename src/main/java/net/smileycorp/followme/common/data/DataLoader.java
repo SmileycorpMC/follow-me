@@ -1,136 +1,224 @@
 package net.smileycorp.followme.common.data;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 import net.minecraft.client.resources.JsonReloadListener;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
-import net.smileycorp.atlas.api.data.EnumDataType;
-import net.smileycorp.atlas.api.data.EnumOperation;
+import net.smileycorp.atlas.api.data.ComparableOperation;
+import net.smileycorp.atlas.api.data.DataType;
+import net.smileycorp.atlas.api.data.LogicalOperation;
 import net.smileycorp.atlas.api.data.NBTExplorer;
-import net.smileycorp.followme.common.ConfigHandler;
+import net.smileycorp.followme.common.FollowHandler;
 import net.smileycorp.followme.common.FollowMe;
 import net.smileycorp.followme.common.ModDefinitions;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class DataLoader extends JsonReloadListener {
 
-	private static Gson GSON = new GsonBuilder().create();
+	private static Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 	private static ResourceLocation CONDITIONS = ModDefinitions.getResource("conditions");
 	private static IForgeRegistry<EntityType<?>> entityRegistry = ForgeRegistries.ENTITIES;
 
 	public DataLoader() {
-		super(GSON, "");
+		super(GSON, "conditions");
 	}
 
-	private static Map<Class<? extends MobEntity>, Set<DataCondition>> conditionMap = new HashMap<Class<? extends MobEntity>, Set<DataCondition>>();
-
-	@SuppressWarnings("unchecked")
 	@Override
-	protected void apply(Map<ResourceLocation, JsonElement> map, IResourceManager manager, IProfiler profiler) {
-		conditionMap.clear();
+	public void apply(Map<ResourceLocation, JsonElement> map, IResourceManager manager, IProfiler profiler) {
+		FollowHandler.resetConditions();
 		if (map.containsKey(CONDITIONS)) {
 			JsonElement data = map.get(CONDITIONS);
 			try {
 				if (data.isJsonObject()) {
-					Class<? extends MobEntity> clazz = null;
-					JsonObject json = data.getAsJsonObject();
-					if (JSONUtils.hasField(json, "entity")) {
-						String name = JSONUtils.getString(json, "entity");
-						if (name.contains(":")) {
-							String[] nameSplit = name.split(":");
-							ResourceLocation loc = new ResourceLocation(nameSplit[0], nameSplit[1]);
-							if (entityRegistry.containsKey(loc)) {
-								clazz = (Class<? extends MobEntity>) ConfigHandler.getClass(entityRegistry.getValue(loc));
-							} else {
-								throw new Exception("Entity " + name + " is not registered");
-							}
-						} else throw new Exception(name + " is not a valid entity");
-					}
-					if (JSONUtils.hasField(json, "entity")) {
-						String name = JSONUtils.getString(json, "entity");
-						if (name.contains(":")) {
-							String[] nameSplit = name.split(":");
-							ResourceLocation loc = new ResourceLocation(nameSplit[0], nameSplit[1]);
-							if (entityRegistry.containsKey(loc)) {
-								clazz = (Class<? extends MobEntity>) ConfigHandler.getClass(entityRegistry.getValue(loc));
-							} else {
-								throw new Exception("Entity " + name + " is not registered");
-							}
-						} else throw new Exception(name + " is not a valid entity");
-					}
-					if (JSONUtils.hasField(json, "conditions")) {
-						for (JsonElement element : JSONUtils.getJsonArray(json, "conditions")) {
-							DataCondition condition = parseArray(element.getAsJsonObject(), PlayerDataCondition.class);
-							if (clazz!=null && condition!=null) {
-								if (conditionMap.containsKey(clazz)) {
-									conditionMap.get(clazz).add(condition);
+					for (Entry<String, JsonElement> entityEntry : data.getAsJsonObject().entrySet()) {
+						if (entityEntry.getValue().isJsonObject()) {
+							String name = null;
+							EntityType<?> type = null;
+							JsonObject json = entityEntry.getValue().getAsJsonObject();
+							name = entityEntry.getKey();
+							if (name.contains(":")) {
+								String[] nameSplit = name.split(":");
+								ResourceLocation loc = new ResourceLocation(nameSplit[0], nameSplit[1]);
+								if (entityRegistry.containsKey(loc)) {
+									type = entityRegistry.getValue(loc);
 								} else {
-									Set<DataCondition> conditions = new HashSet<DataCondition>();
-									conditions.add(condition);
-									conditionMap.put(clazz, conditions);
+									throw new Exception("Entity " + name + " is not registered");
 								}
+							} else throw new Exception(name + " is not a valid entity");
+							if (JSONUtils.isValidNode(json, "conditions")) {
+								for (Entry<String, JsonElement> entry : JSONUtils.getAsJsonObject(json, "conditions").entrySet()) {
+									if (entry.getValue().isJsonObject()) {
+										DataCondition condition = parseCondition(entry.getValue().getAsJsonObject(), entry.getKey());
+										if (type!=null && condition!=null) {
+											FollowHandler.addCondition(type, entry.getKey(), condition);
+										} else {
+											throw new Exception("condition [type="+type + ", condition="+ condition +"] is not valid for Entity " + name);
+										}
+									} else {
+										throw new Exception("Conditions are not in the JsonObject format");
+									}
+								}
+							} else {
+								throw new Exception("Entity " + name + " has no defined conditions");
 							}
 						}
 					}
+				} else {
+					throw new Exception("Conditions datapack has no entries");
 				}
 			} catch (Exception e) {
-				FollowMe.logError("Failed to load conditions datapack", e);
+				FollowMe.logError("Failed to load conditions datapack ", e);
 			}
+		} else {
+			FollowMe.logError("Failed to load conditions datapack", new FileNotFoundException(CONDITIONS.toString()));
 		}
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private DataCondition parseArray(JsonObject json, Class<? extends DataCondition> clazz) throws Exception {
-		EnumDataType type = null;
+	private DataCondition parseCondition(JsonObject json, String name) throws Exception {
+		DataType<?> type = null;
 		NBTExplorer<?> explorer = null;
-		EnumOperation operation = null;
+		ComparableOperation operation = null;
 		Comparable value = null;
-		if (JSONUtils.hasField(json, "type")) {
-			type = EnumDataType.of(JSONUtils.getString(json, "type"));
+		if (JSONUtils.isValidNode(json, "type")) {
+			type = DataType.of(JSONUtils.getAsString(json, "type"));
 		}
-		if (JSONUtils.hasField(json, "target") && type!=null) {
-			explorer = new NBTExplorer(JSONUtils.getString(json, "target"), type.getType());
+		if (JSONUtils.isValidNode(json, "target") && type!=null) {
+			explorer = new NBTExplorer(JSONUtils.getAsString(json, "target"), type);
 		}
-		if (JSONUtils.hasField(json, "operation")) {
-			operation = EnumOperation.of(JSONUtils.getString(json, "operation"));
-		}
-		if (JSONUtils.hasField(json, "value") && type!=null) {
-			JsonElement element = json.get("value");
-			value = type.readFromJson(element);
-		}
-		if (JSONUtils.hasField(json, "mode") &! (type == null || explorer == null || operation == null || value == null)) {
-			String mode = JSONUtils.getString(json, "mode");
-			if (mode.equals("player_nbt")) {
-				return new PlayerDataCondition(explorer, value, operation);
-			} else if (mode.equals("entity_nbt")) {
-				return new EntityDataCondition(explorer, value, operation);
+		if (JSONUtils.isValidNode(json, "operation")) {
+			String operationString = JSONUtils.getAsString(json, "operation");
+			if (operationString.equals("%")) {
+				if (JSONUtils.isValidNode(json, "value") && type!=null) {
+					SubOperationParser parser = SubOperationParser.parseValue(JSONUtils.getAsJsonObject(json, "value"), type);
+					if (parser.isValid()) {
+						value = parser.getValue();
+						operation = ComparableOperation.modOf(parser.comparison, parser.subOperation);
+					} else {
+						throw new Exception("SubOperation has thrown null " + parser);
+					}
+				}
+			} else {
+				operation = ComparableOperation.of(JSONUtils.getAsString(json, "operation"));
+				if (JSONUtils.isValidNode(json, "value") && type!=null) {
+					JsonElement element = json.get("value");
+					value = type.readFromJson(element);
+				}
 			}
 		}
-		return null;
+		if (JSONUtils.isValidNode(json, "mode")) {
+			String mode = JSONUtils.getAsString(json, "mode");
+			if (!(type == null || explorer == null || operation == null || value == null)) {
+				if (mode.equals("player_nbt")) {
+					return new PlayerDataCondition(explorer, value, operation);
+				} else if (mode.equals("entity_nbt")) {
+					return new EntityDataCondition(explorer, value, operation);
+				} else if (mode.equals("world_nbt")) {
+					return new WorldDataCondition(explorer, value, operation);
+				} else if (mode.equals("compare_nbt")) {
+					return new CompareDataCondition(explorer, new NBTExplorer((String) value, type), operation);
+				} else {
+					throw new Exception("\"" + mode + "\" for condition \"" + name + "\"  is not a valid condition mode");
+				}
+			} else if (JSONUtils.isValidNode(json, "conditions")) {
+				LogicalOperation gate = LogicalOperation.fromName(mode);
+				List<DataCondition> subConditions = new ArrayList<DataCondition>();
+				if (gate != null) {
+					JsonArray array = JSONUtils.getAsJsonArray(json, "conditions");
+					for (int i = 0; i < array.size(); i++) {
+						JsonElement field = array.get(i);
+						try {
+							subConditions.add(parseCondition((JsonObject) field, name+"_"+i));
+						} catch (Exception e) {
+							throw new Exception("Failed parsing sub condition \"" + e.getMessage() +"\"for condition \"" + name + "\"");
+						}
+					}
+					if (!subConditions.isEmpty()) {
+							return new LogicalDataCondition(gate, subConditions);
+					} else {
+						throw new Exception("Operator has no valid conditions");
+					}
+				} else {
+					throw new Exception("\"" + JSONUtils.getAsString(json, "mode") + "\" for condition \"" + name + "\" is not a valid logical operator");
+				}
+			} else {
+				throw new Exception("\"" + mode + "\" for condition \"" + name + "\" is not a valid mode");
+			}
+		} else {
+			throw new Exception("Condition \"" + name + "\" does not have \"mode\" value");
+		}
 	}
 
-	public static boolean matches(MobEntity entity, PlayerEntity player) {
-		if (conditionMap.containsKey(entity.getClass())) {
-			for (DataCondition condition : conditionMap.get(entity.getClass())) {
-				if (!condition.matches(entity, player)) return false;
-			}
+	public static class SubOperationParser {
+
+		private final Comparable<?> comparison;
+		private final ComparableOperation subOperation;
+		private final Comparable<?> value;
+
+		private SubOperationParser(Comparable<?> comparison, ComparableOperation subOperation, Comparable<?> value) {
+			this.comparison=comparison;
+			this.subOperation=subOperation;
+			this.value=value;
 		}
-		return true;
+
+		public boolean isValid() {
+			return comparison!=null && subOperation!=null && value!=null;
+		}
+
+		public Comparable<?> getComparison() {
+			return comparison;
+		}
+
+		public ComparableOperation subOperation() {
+			return subOperation;
+		}
+
+		public Comparable<?> getValue() {
+			return value;
+		}
+
+		public static SubOperationParser parseValue(JsonObject json, DataType<?> type) throws Exception {
+			Comparable<?> comparison = null;
+			ComparableOperation subOperation = null;
+			Comparable<?> value = null;
+			String operationString = JSONUtils.getAsString(json, "operation");
+			if (JSONUtils.isValidNode(json, "comparison") && type!=null) {
+				JsonElement element = json.get("comparison");
+				comparison = type.readFromJson(element);
+			}
+			if (operationString.equals("%")) {
+				if (JSONUtils.isValidNode(json, "value") && type!=null) {
+					SubOperationParser parser = SubOperationParser.parseValue(JSONUtils.getAsJsonObject(json, "value"), type);
+					if (parser.isValid()) {
+						value = parser.getValue();
+						subOperation = ComparableOperation.modOf(parser.comparison, parser.subOperation);
+					}
+				}
+			} else {
+				subOperation = ComparableOperation.of(JSONUtils.getAsString(json, "operation"));
+				if (JSONUtils.isValidNode(json, "value") && type!=null) {
+					JsonElement element = json.get("value");
+					value = type.readFromJson(element);
+				}
+			}
+			return new SubOperationParser(comparison, subOperation, value);
+		}
+
 	}
 
 }

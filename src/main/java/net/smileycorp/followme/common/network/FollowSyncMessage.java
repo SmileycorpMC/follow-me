@@ -16,24 +16,24 @@ public class FollowSyncMessage implements IPacket<INetHandler> {
 		private boolean isUnfollow;
 
 		public FollowSyncMessage(MobEntity entity, boolean isUnfollow) {
-			this.entity = entity.getEntityId();
+			this.entity = entity.getId();
 			this.isUnfollow = isUnfollow;
 		}
 
 		@Override
-		public void readPacketData(PacketBuffer buf) throws IOException {
+		public void read(PacketBuffer buf) throws IOException {
 			entity = buf.readInt();
 			isUnfollow = buf.readBoolean();
 		}
 
 		@Override
-		public void writePacketData(PacketBuffer buf) throws IOException {
+		public void write(PacketBuffer buf) throws IOException {
 			buf.writeInt(entity);
 			buf.writeBoolean(isUnfollow);
 		}
 
 		public MobEntity getEntity(World world) {
-			return (MobEntity) world.getEntityByID(entity);
+			return (MobEntity) world.getEntity(entity);
 		}
 
 		public boolean isUnfollow() {
@@ -41,6 +41,6 @@ public class FollowSyncMessage implements IPacket<INetHandler> {
 		}
 
 		@Override
-		public void processPacket(INetHandler handler) {}
+		public void handle(INetHandler handler) {}
 
 }

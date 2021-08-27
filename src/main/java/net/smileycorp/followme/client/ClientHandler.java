@@ -2,6 +2,7 @@ package net.smileycorp.followme.client;
 
 import java.awt.event.KeyEvent;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 import net.minecraft.client.Minecraft;
@@ -10,6 +11,8 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.particles.ParticleTypes;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.Color;
@@ -26,7 +29,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.smileycorp.atlas.api.util.DirectionUtils;
-import net.smileycorp.followme.common.ConfigHandler;
+import net.smileycorp.followme.common.CommonConfigHandler;
 import net.smileycorp.followme.common.FollowMe;
 import net.smileycorp.followme.common.ModDefinitions;
 import net.smileycorp.followme.common.network.FollowMessage;
@@ -54,8 +57,8 @@ public class ClientHandler {
 		Minecraft mc = Minecraft.getInstance();
 		PlayerEntity player = mc.player;
 		if (player!=null) {
-			World world = player.world;
-			if (FOLLOW_KEY.isPressed()) {
+			World world = player.level;
+			if (FOLLOW_KEY.isDown()) {
 				RayTraceResult ray = DirectionUtils.getPlayerRayTrace(world, player, 4.5f);
 				if (ray instanceof EntityRayTraceResult) {
 					Entity target = ((EntityRayTraceResult) ray).getEntity();
@@ -66,7 +69,7 @@ public class ClientHandler {
 					}
 				}
 			}
-			if (STOP_KEY.isPressed()) {
+			if (STOP_KEY.isDown()) {
 				PacketHandler.NETWORK_INSTANCE.sendToServer(new StopFollowMessage(player));
 			}
 		}
@@ -74,9 +77,9 @@ public class ClientHandler {
 
 	@SubscribeEvent
 	public void onWorldUnload(WorldEvent.Unload event) {
-		if (event.getWorld().isRemote()) {
+		if (event.getWorld().isClientSide()) {
 			FOLLOW_ENTITIES.clear();
-			ConfigHandler.resetConfigSync();
+			CommonConfigHandler.resetConfigSync();
 			FollowMe.logInfo("Cleared config from server.");
 		}
 	}
@@ -93,12 +96,12 @@ public class ClientHandler {
 				if (player!=null) {
 					EntityRenderer<MobEntity> renderer = (EntityRenderer<MobEntity>) event.getEntityRenderer();
 					MatrixStack matrix = event.getMatrixStack();
-					matrix.push();
+					matrix.pushPose();
 					matrix.translate(0, -0.2f, 0);
 					IFormattableTextComponent text = new TranslationTextComponent("text.followme.following");
-					text.setStyle(Style.EMPTY.setColor(Color.fromInt(0x00FF21)));
-					renderer.renderName(entity, text, matrix, event.getRenderTypeBuffer(), event.getPackedLight());
-					matrix.pop();
+					text.setStyle(Style.EMPTY.withColor(Color.fromRgb(0x00FF21)));
+					renderer.renderNameTag(entity, text, matrix, event.getRenderTypeBuffer(), event.getPackedLight());
+					matrix.popPose();;
 				}
 			}
 		}
@@ -106,12 +109,21 @@ public class ClientHandler {
 
 	public static void syncFollowEntities(FollowSyncMessage message) {
 		Minecraft mc = Minecraft.getInstance();
-		MobEntity entity = message.getEntity(mc.world);
+		MobEntity entity = message.getEntity(mc.level);
 		if (message.isUnfollow()) {
 			ClientHandler.FOLLOW_ENTITIES.remove(entity);
 		} else {
 			ClientHandler.FOLLOW_ENTITIES.add(entity);
 		}
+	}
+
+	public static void processEntityDeny(MobEntity entity) {
+		World world = entity.level;
+		Random rand = world.random;
+		for (int i = 0; i<6; i++) {
+			world.addParticle(ParticleTypes.ANGRY_VILLAGER, entity.getX()+rand.nextFloat(), entity.getY()+(entity.getBbHeight()/2f)+rand.nextFloat(), entity.getZ()+rand.nextFloat(),0, 0.3f, 0);
+		}
+		world.playLocalSound(entity.getX(), entity.getY(), entity.getZ(), SoundEvents.VILLAGER_NO, entity.getSoundSource(), 0.3f, rand.nextFloat(), false);
 	}
 
 }

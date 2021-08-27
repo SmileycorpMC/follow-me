@@ -16,19 +16,19 @@ public class StopFollowMessage implements IPacket<INetHandler> {
 	private UUID player = null;
 
 	public StopFollowMessage(PlayerEntity player) {
-		this.player = PlayerEntity.getUUID(player.getGameProfile());
+		this.player = player.getUUID();
 	}
 
 
 	@Override
-	public void readPacketData(PacketBuffer buf) throws IOException {
-		String uuid = buf.readString();
+	public void read(PacketBuffer buf) throws IOException {
+		String uuid = buf.readUtf();
 		if (DataUtils.isValidUUID(uuid)) player = UUID.fromString(uuid);
 	}
 
 	@Override
-	public void writePacketData(PacketBuffer buf) throws IOException {
-		if (player!=null)buf.writeString(player.toString());
+	public void write(PacketBuffer buf) throws IOException {
+		if (player!=null)buf.writeUtf(player.toString());
 	}
 
 	public UUID getPlayerUUID() {
@@ -36,7 +36,7 @@ public class StopFollowMessage implements IPacket<INetHandler> {
 	}
 
 	@Override
-	public void processPacket(INetHandler handler) {}
+	public void handle(INetHandler handler) {}
 
 	@Override
 	public String toString() {

@@ -1,5 +1,6 @@
 package net.smileycorp.followme.common.network;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.PrioritizedGoal;
@@ -16,11 +17,11 @@ import net.smileycorp.atlas.api.network.SimpleByteMessage;
 import net.smileycorp.atlas.api.network.SimpleMessageDecoder;
 import net.smileycorp.atlas.api.network.SimpleMessageEncoder;
 import net.smileycorp.followme.client.ClientHandler;
-import net.smileycorp.followme.common.ConfigHandler;
-import net.smileycorp.followme.common.EventListener;
+import net.smileycorp.followme.common.CommonConfigHandler;
+import net.smileycorp.followme.common.FollowHandler;
 import net.smileycorp.followme.common.FollowMe;
-import net.smileycorp.followme.common.FollowPlayerGoal;
 import net.smileycorp.followme.common.ModDefinitions;
+import net.smileycorp.followme.common.ai.FollowPlayerGoal;
 
 public class PacketHandler {
 
@@ -36,33 +37,35 @@ public class PacketHandler {
 				new SimpleMessageDecoder<StopFollowMessage>(StopFollowMessage.class), (T, K)-> processStopFollowMessage(T, K.get()));
 		NETWORK_INSTANCE.registerMessage(3, FollowSyncMessage.class, new SimpleMessageEncoder<FollowSyncMessage>(),
 				new SimpleMessageDecoder<FollowSyncMessage>(FollowSyncMessage.class), (T, K)-> processFollowSyncMessage(T, K.get()));
+		NETWORK_INSTANCE.registerMessage(4, DenyFollowMessage.class, new SimpleMessageEncoder<DenyFollowMessage>(),
+				new SimpleMessageDecoder<DenyFollowMessage>(DenyFollowMessage.class), (T, K)-> processDenyMessage(T, K.get()));
 
 	}
 
 	public static void processSyncMessage(SimpleByteMessage message, Context ctx) {
-		ctx.enqueueWork(() ->  DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> () -> ConfigHandler.syncClient(message.getData())));
+		ctx.enqueueWork(() ->  DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> () -> CommonConfigHandler.syncClient(message.getData())));
 		ctx.setPacketHandled(true);
 	}
 
 	public static void processFollowMessage(FollowMessage message, Context ctx) {
 		ctx.enqueueWork(() -> {
 			MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-			PlayerEntity player = server.getPlayerList().getPlayerByUUID(message.getPlayerUUID());
-			MobEntity entity = message.getEntity(player.world);
-			EventListener.processInteraction(player.world, player, entity, Hand.MAIN_HAND);});
+			PlayerEntity player = server.getPlayerList().getPlayer(message.getPlayerUUID());
+			MobEntity entity = message.getEntity(player.level);
+			FollowHandler.processInteraction(player.level, player, entity, Hand.MAIN_HAND);});
 		ctx.setPacketHandled(true);
 	}
 
 	public static void processStopFollowMessage(StopFollowMessage message, Context ctx) {
 		ctx.enqueueWork(() -> {
 			MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-			PlayerEntity player = server.getPlayerList().getPlayerByUUID(message.getPlayerUUID());
-			for (MobEntity entity : player.world.getEntitiesWithinAABB(MobEntity.class, player.getBoundingBox().grow(5), (e) -> ConfigHandler.isInWhitelist(e))) {
+			PlayerEntity player = server.getPlayerList().getPlayer(message.getPlayerUUID());
+			for (MobEntity entity : player.level.getEntitiesOfClass(MobEntity.class, player.getBoundingBox().inflate(5), (e) -> CommonConfigHandler.isInWhitelist(e))) {
 				for (PrioritizedGoal entry : entity.goalSelector.getRunningGoals().toArray(PrioritizedGoal[]::new)) {
 					Goal goal = entry.getGoal();
 					if (goal instanceof FollowPlayerGoal) {
 						if (((FollowPlayerGoal) goal).getPlayer() == player) {
-							FollowMe.DELAYED_THREAD_EXECUTOR.execute(() -> FollowMe.removeAI((FollowPlayerGoal) goal));
+							FollowMe.DELAYED_THREAD_EXECUTOR.execute(() -> FollowHandler.removeAI((FollowPlayerGoal) goal));
 						}
 					}
 				}
@@ -73,6 +76,11 @@ public class PacketHandler {
 
 	public static void processFollowSyncMessage(FollowSyncMessage message, Context ctx) {
 		ctx.enqueueWork(() ->  DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> () -> ClientHandler.syncFollowEntities(message)));
+		ctx.setPacketHandled(true);
+	}
+
+	public static void processDenyMessage(DenyFollowMessage message, Context ctx) {
+		ctx.enqueueWork(() ->  DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> () -> ClientHandler.processEntityDeny(message.getEntity(Minecraft.getInstance().level))));
 		ctx.setPacketHandled(true);
 	}
 }
