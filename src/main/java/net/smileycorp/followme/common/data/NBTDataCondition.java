@@ -1,7 +1,7 @@
 package net.smileycorp.followme.common.data;
 
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.smileycorp.atlas.api.data.ComparableOperation;
 import net.smileycorp.atlas.api.data.NBTExplorer;
@@ -21,8 +21,8 @@ public abstract class NBTDataCondition<T extends Comparable<T>> implements DataC
 	}
 
 	@Override
-	public boolean matches(MobEntity entity, PlayerEntity player) {
-		CompoundNBT nbt = writeNBT(entity, player);
+	public boolean matches(MobEntity entity, LivingEntity user) {
+		CompoundNBT nbt = writeNBT(entity, user);
 		try {
 			return operation.apply(explorer.findValue(nbt), value);
 		} catch (Exception e) {
@@ -31,7 +31,7 @@ public abstract class NBTDataCondition<T extends Comparable<T>> implements DataC
 		return false;
 	}
 
-	protected abstract CompoundNBT writeNBT(MobEntity entity, PlayerEntity player);
+	protected abstract CompoundNBT writeNBT(MobEntity entity, LivingEntity user);
 
 	@Override
 	public String toString() {

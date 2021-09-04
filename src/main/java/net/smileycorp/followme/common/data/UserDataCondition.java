@@ -7,15 +7,15 @@ import net.smileycorp.atlas.api.data.ComparableOperation;
 import net.smileycorp.atlas.api.data.NBTExplorer;
 
 
-public class EntityDataCondition<T extends Comparable<T>> extends NBTDataCondition<T> {
+public class UserDataCondition<T extends Comparable<T>> extends NBTDataCondition<T> {
 
-	public EntityDataCondition(NBTExplorer<T> explorer, T value, ComparableOperation operation) {
+	public UserDataCondition(NBTExplorer<T> explorer, T value, ComparableOperation operation) {
 		super(explorer, value, operation);
 	}
 
 	@Override
 	protected CompoundNBT writeNBT(MobEntity entity, LivingEntity user) {
-		return entity.saveWithoutId(new CompoundNBT());
+		return user.saveWithoutId(new CompoundNBT());
 	}
 
 }

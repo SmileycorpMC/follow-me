@@ -3,7 +3,6 @@ package net.smileycorp.followme.common.event;
 import java.util.Map;
 
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.Cancelable;
 import net.smileycorp.followme.common.data.DataCondition;
@@ -18,12 +17,12 @@ public class FollowPlayerEvent extends LivingEvent {
 	 */
 
 	public final Map<String, DataCondition> conditions;
-	public PlayerEntity player;
+	public LivingEntity user;
 
-	public FollowPlayerEvent(LivingEntity entity, PlayerEntity player, Map<String, DataCondition> conditions) {
+	public FollowPlayerEvent(LivingEntity entity, LivingEntity user, Map<String, DataCondition> conditions) {
 		super(entity);
 		this.conditions=conditions;
-		this.player=player;
+		this.user=user;
 	}
 
 }

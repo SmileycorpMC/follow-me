@@ -124,14 +124,17 @@ public class DataLoader extends JsonReloadListener {
 		if (JSONUtils.isValidNode(json, "mode")) {
 			String mode = JSONUtils.getAsString(json, "mode");
 			if (!(type == null || explorer == null || operation == null || value == null)) {
-				if (mode.equals("player_nbt")) {
-					return new PlayerDataCondition(explorer, value, operation);
+				if (mode.equals("user_nbt")) {
+					return new UserDataCondition(explorer, value, operation);
 				} else if (mode.equals("entity_nbt")) {
 					return new EntityDataCondition(explorer, value, operation);
 				} else if (mode.equals("world_nbt")) {
 					return new WorldDataCondition(explorer, value, operation);
 				} else if (mode.equals("compare_nbt")) {
 					return new CompareDataCondition(explorer, new NBTExplorer((String) value, type), operation);
+				} else if (mode.equals("player_nbt")) {
+					FollowMe.logError("\"player_nbt\" is depreciated, use \"user_nbt\" in future", new Exception("\"player_nbt\""));
+					return new UserDataCondition(explorer, value, operation);
 				} else {
 					throw new Exception("\"" + mode + "\" for condition \"" + name + "\"  is not a valid condition mode");
 				}

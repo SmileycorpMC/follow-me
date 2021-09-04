@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.util.ResourceLocation;
@@ -90,11 +91,13 @@ public class CommonConfigHandler {
 		return (Class<? extends MobEntity>) value.create(ServerLifecycleHooks.getCurrentServer().overworld()).getClass();
 	}
 
-	public static boolean isInWhitelist(MobEntity entity) {
-		if (entity.level.isClientSide) {
-			if (entityWhitelist.contains(entity.getType())) return true;
-		} else {
-			if (getLocalWhitelist().contains(entity.getType())) return true;
+	public static boolean isInWhitelist(Entity entity) {
+		if (entity instanceof MobEntity) {
+			if (entity.level.isClientSide) {
+				if (entityWhitelist.contains(entity.getType())) return true;
+			} else {
+				if (getLocalWhitelist().contains(entity.getType())) return true;
+			}
 		}
 		return false;
 	}

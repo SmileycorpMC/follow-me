@@ -20,7 +20,7 @@ import net.smileycorp.followme.common.CommonConfigHandler;
 import net.smileycorp.followme.common.FollowHandler;
 import net.smileycorp.followme.common.FollowMe;
 import net.smileycorp.followme.common.ModDefinitions;
-import net.smileycorp.followme.common.ai.FollowPlayerGoal;
+import net.smileycorp.followme.common.ai.FollowUserGoal;
 
 public class PacketHandler {
 
@@ -62,9 +62,9 @@ public class PacketHandler {
 			for (MobEntity entity : player.level.getEntitiesOfClass(MobEntity.class, player.getBoundingBox().inflate(5), (e) -> CommonConfigHandler.isInWhitelist(e))) {
 				for (PrioritizedGoal entry : entity.goalSelector.getRunningGoals().toArray(PrioritizedGoal[]::new)) {
 					Goal goal = entry.getGoal();
-					if (goal instanceof FollowPlayerGoal) {
-						if (((FollowPlayerGoal) goal).getPlayer() == player) {
-							FollowMe.DELAYED_THREAD_EXECUTOR.execute(() -> FollowHandler.removeAI((FollowPlayerGoal) goal));
+					if (goal instanceof FollowUserGoal) {
+						if (((FollowUserGoal) goal).getUser() == player) {
+							FollowMe.DELAYED_THREAD_EXECUTOR.execute(() -> FollowHandler.removeAI((FollowUserGoal) goal));
 						}
 					}
 				}
