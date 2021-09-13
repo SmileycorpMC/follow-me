@@ -4,7 +4,7 @@ license="GNU LESSER GENERAL PUBLIC LICENSE Version 2.1"
 
 [[mods]]
 modId="followme"
-version="1.1.6"
+version="1.1.6a"
 displayName="Follow Me"
 displayURL="https://www.curseforge.com/minecraft/mc-mods/follow-me"
 updateJSONURL=""

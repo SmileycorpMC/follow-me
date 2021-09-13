@@ -18,7 +18,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.network.NetworkDirection;
 import net.smileycorp.followme.common.ai.FollowUserGoal;
 import net.smileycorp.followme.common.data.DataCondition;
-import net.smileycorp.followme.common.event.FollowPlayerEvent;
+import net.smileycorp.followme.common.event.FollowUserEvent;
 import net.smileycorp.followme.common.network.DenyFollowMessage;
 import net.smileycorp.followme.common.network.FollowSyncMessage;
 import net.smileycorp.followme.common.network.PacketHandler;
@@ -52,14 +52,15 @@ public class FollowHandler {
 			//doesn't run for off hand
 			if (hand == Hand.MAIN_HAND) {
 				//cancels if the player is on a different team to the entity
-				FollowPlayerEvent followEvent = new FollowPlayerEvent(entity, user, conditions.get(entity.getType()));
+				FollowUserEvent followEvent = new FollowUserEvent(entity, user, conditions.get(entity.getType()));
 				MinecraftForge.EVENT_BUS.post(followEvent);
 				if (followEvent.isCanceled()) return false;
 				user = followEvent.user;
 				if (followEvent.conditions != null) {
 					for (DataCondition condition : followEvent.conditions.values()) {
 						if (!condition.matches(entity, user))  {
-							PacketHandler.NETWORK_INSTANCE.sendTo(new DenyFollowMessage(entity), ((ServerPlayerEntity)user).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+							if (user instanceof ServerPlayerEntity) PacketHandler.NETWORK_INSTANCE.sendTo(new DenyFollowMessage(entity),
+									((ServerPlayerEntity)user).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
 							return false;
 						}
 					}
@@ -76,7 +77,7 @@ public class FollowHandler {
 						FollowUserGoal task = (FollowUserGoal) entry.getGoal();
 						if (task.getUser() == user) {
 							removeAI(task);
-						} else {
+						} else if (user instanceof ServerPlayerEntity) {
 							PacketHandler.NETWORK_INSTANCE.sendTo(new DenyFollowMessage(entity), ((ServerPlayerEntity)user).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
 						}
 						hasGoal= true;

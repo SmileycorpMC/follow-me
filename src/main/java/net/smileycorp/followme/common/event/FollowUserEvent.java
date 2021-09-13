@@ -8,7 +8,7 @@ import net.minecraftforge.eventbus.api.Cancelable;
 import net.smileycorp.followme.common.data.DataCondition;
 
 @Cancelable
-public class FollowPlayerEvent extends LivingEvent {
+public class FollowUserEvent extends LivingEvent {
 	/*
 	 * Fired on the Forge event bus whenever a player tries to make an entity follow them
 	 * Can be canceled to stop entities from following the player
@@ -19,7 +19,7 @@ public class FollowPlayerEvent extends LivingEvent {
 	public final Map<String, DataCondition> conditions;
 	public LivingEntity user;
 
-	public FollowPlayerEvent(LivingEntity entity, LivingEntity user, Map<String, DataCondition> conditions) {
+	public FollowUserEvent(LivingEntity entity, LivingEntity user, Map<String, DataCondition> conditions) {
 		super(entity);
 		this.conditions=conditions;
 		this.user=user;
