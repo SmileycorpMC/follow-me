@@ -6,12 +6,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import net.minecraft.client.resources.JsonReloadListener;
-import net.minecraft.entity.EntityType;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.ResourceLocation;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.smileycorp.atlas.api.data.ComparableOperation;
@@ -22,13 +28,7 @@ import net.smileycorp.followme.common.FollowHandler;
 import net.smileycorp.followme.common.FollowMe;
 import net.smileycorp.followme.common.ModDefinitions;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
-public class DataLoader extends JsonReloadListener {
+public class DataLoader extends SimpleJsonResourceReloadListener {
 
 	private static Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 	private static ResourceLocation CONDITIONS = ModDefinitions.getResource("conditions");
@@ -39,7 +39,7 @@ public class DataLoader extends JsonReloadListener {
 	}
 
 	@Override
-	public void apply(Map<ResourceLocation, JsonElement> map, IResourceManager manager, IProfiler profiler) {
+	public void apply(Map<ResourceLocation, JsonElement> map, ResourceManager manager, ProfilerFiller profiler) {
 		FollowHandler.resetConditions();
 		if (map.containsKey(CONDITIONS)) {
 			JsonElement data = map.get(CONDITIONS);
@@ -60,8 +60,8 @@ public class DataLoader extends JsonReloadListener {
 									throw new Exception("Entity " + name + " is not registered");
 								}
 							} else throw new Exception(name + " is not a valid entity");
-							if (JSONUtils.isValidNode(json, "conditions")) {
-								for (Entry<String, JsonElement> entry : JSONUtils.getAsJsonObject(json, "conditions").entrySet()) {
+							if (GsonHelper.isValidNode(json, "conditions")) {
+								for (Entry<String, JsonElement> entry : GsonHelper.getAsJsonObject(json, "conditions").entrySet()) {
 									if (entry.getValue().isJsonObject()) {
 										DataCondition condition = parseCondition(entry.getValue().getAsJsonObject(), entry.getKey());
 										if (type!=null && condition!=null) {
@@ -95,17 +95,17 @@ public class DataLoader extends JsonReloadListener {
 		NBTExplorer<?> explorer = null;
 		ComparableOperation operation = null;
 		Comparable value = null;
-		if (JSONUtils.isValidNode(json, "type")) {
-			type = DataType.of(JSONUtils.getAsString(json, "type"));
+		if (GsonHelper.isValidNode(json, "type")) {
+			type = DataType.of(GsonHelper.getAsString(json, "type"));
 		}
-		if (JSONUtils.isValidNode(json, "target") && type!=null) {
-			explorer = new NBTExplorer(JSONUtils.getAsString(json, "target"), type);
+		if (GsonHelper.isValidNode(json, "target") && type!=null) {
+			explorer = new NBTExplorer(GsonHelper.getAsString(json, "target"), type);
 		}
-		if (JSONUtils.isValidNode(json, "operation")) {
-			String operationString = JSONUtils.getAsString(json, "operation");
+		if (GsonHelper.isValidNode(json, "operation")) {
+			String operationString = GsonHelper.getAsString(json, "operation");
 			if (operationString.equals("%")) {
-				if (JSONUtils.isValidNode(json, "value") && type!=null) {
-					SubOperationParser parser = SubOperationParser.parseValue(JSONUtils.getAsJsonObject(json, "value"), type);
+				if (GsonHelper.isValidNode(json, "value") && type!=null) {
+					SubOperationParser parser = SubOperationParser.parseValue(GsonHelper.getAsJsonObject(json, "value"), type);
 					if (parser.isValid()) {
 						value = parser.getValue();
 						operation = ComparableOperation.modOf(parser.comparison, parser.subOperation);
@@ -114,15 +114,15 @@ public class DataLoader extends JsonReloadListener {
 					}
 				}
 			} else {
-				operation = ComparableOperation.of(JSONUtils.getAsString(json, "operation"));
-				if (JSONUtils.isValidNode(json, "value") && type!=null) {
+				operation = ComparableOperation.of(GsonHelper.getAsString(json, "operation"));
+				if (GsonHelper.isValidNode(json, "value") && type!=null) {
 					JsonElement element = json.get("value");
 					value = type.readFromJson(element);
 				}
 			}
 		}
-		if (JSONUtils.isValidNode(json, "mode")) {
-			String mode = JSONUtils.getAsString(json, "mode");
+		if (GsonHelper.isValidNode(json, "mode")) {
+			String mode = GsonHelper.getAsString(json, "mode");
 			if (!(type == null || explorer == null || operation == null || value == null)) {
 				if (mode.equals("user_nbt")) {
 					return new UserDataCondition(explorer, value, operation);
@@ -138,11 +138,11 @@ public class DataLoader extends JsonReloadListener {
 				} else {
 					throw new Exception("\"" + mode + "\" for condition \"" + name + "\"  is not a valid condition mode");
 				}
-			} else if (JSONUtils.isValidNode(json, "conditions")) {
+			} else if (GsonHelper.isValidNode(json, "conditions")) {
 				LogicalOperation gate = LogicalOperation.fromName(mode);
 				List<DataCondition> subConditions = new ArrayList<DataCondition>();
 				if (gate != null) {
-					JsonArray array = JSONUtils.getAsJsonArray(json, "conditions");
+					JsonArray array = GsonHelper.getAsJsonArray(json, "conditions");
 					for (int i = 0; i < array.size(); i++) {
 						JsonElement field = array.get(i);
 						try {
@@ -157,7 +157,7 @@ public class DataLoader extends JsonReloadListener {
 						throw new Exception("Operator has no valid conditions");
 					}
 				} else {
-					throw new Exception("\"" + JSONUtils.getAsString(json, "mode") + "\" for condition \"" + name + "\" is not a valid logical operator");
+					throw new Exception("\"" + GsonHelper.getAsString(json, "mode") + "\" for condition \"" + name + "\" is not a valid logical operator");
 				}
 			} else {
 				throw new Exception("\"" + mode + "\" for condition \"" + name + "\" is not a valid mode");
@@ -199,22 +199,22 @@ public class DataLoader extends JsonReloadListener {
 			Comparable<?> comparison = null;
 			ComparableOperation subOperation = null;
 			Comparable<?> value = null;
-			String operationString = JSONUtils.getAsString(json, "operation");
-			if (JSONUtils.isValidNode(json, "comparison") && type!=null) {
+			String operationString = GsonHelper.getAsString(json, "operation");
+			if (GsonHelper.isValidNode(json, "comparison") && type!=null) {
 				JsonElement element = json.get("comparison");
 				comparison = type.readFromJson(element);
 			}
 			if (operationString.equals("%")) {
-				if (JSONUtils.isValidNode(json, "value") && type!=null) {
-					SubOperationParser parser = SubOperationParser.parseValue(JSONUtils.getAsJsonObject(json, "value"), type);
+				if (GsonHelper.isValidNode(json, "value") && type!=null) {
+					SubOperationParser parser = SubOperationParser.parseValue(GsonHelper.getAsJsonObject(json, "value"), type);
 					if (parser.isValid()) {
 						value = parser.getValue();
 						subOperation = ComparableOperation.modOf(parser.comparison, parser.subOperation);
 					}
 				}
 			} else {
-				subOperation = ComparableOperation.of(JSONUtils.getAsString(json, "operation"));
-				if (JSONUtils.isValidNode(json, "value") && type!=null) {
+				subOperation = ComparableOperation.of(GsonHelper.getAsString(json, "operation"));
+				if (GsonHelper.isValidNode(json, "value") && type!=null) {
 					JsonElement element = json.get("value");
 					value = type.readFromJson(element);
 				}

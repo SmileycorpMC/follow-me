@@ -2,8 +2,8 @@ package net.smileycorp.followme.common.data;
 
 import java.util.List;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.smileycorp.atlas.api.data.LogicalOperation;
 
 public class LogicalDataCondition implements DataCondition {
@@ -17,7 +17,7 @@ public class LogicalDataCondition implements DataCondition {
 	}
 
 	@Override
-	public boolean matches(MobEntity entity, LivingEntity player) {
+	public boolean matches(Mob entity, LivingEntity player) {
 		boolean result = false;
 		for (DataCondition condition : subConditions) {
 			result = operation.apply(result, condition.matches(entity, player));

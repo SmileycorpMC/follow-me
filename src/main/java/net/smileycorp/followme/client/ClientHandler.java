@@ -1,33 +1,35 @@
 package net.smileycorp.followme.client;
 
+
 import java.awt.event.KeyEvent;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.EntityRayTraceResult;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.text.Color;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
 import net.minecraftforge.client.event.RenderNameplateEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fmlclient.registry.ClientRegistry;
 import net.smileycorp.atlas.api.util.DirectionUtils;
 import net.smileycorp.followme.common.CommonConfigHandler;
 import net.smileycorp.followme.common.FollowMe;
@@ -38,15 +40,13 @@ import net.smileycorp.followme.common.network.FollowSyncMessage;
 import net.smileycorp.followme.common.network.PacketHandler;
 import net.smileycorp.followme.common.network.StopFollowMessage;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-
 @EventBusSubscriber(modid = ModDefinitions.MODID, value = Dist.CLIENT)
 public class ClientHandler {
 
-	public static Set<MobEntity> FOLLOW_ENTITIES = new HashSet<MobEntity>();
+	public static Set<Mob> FOLLOW_ENTITIES = new HashSet<Mob>();
 
-	private static KeyBinding FOLLOW_KEY = new KeyBinding("key.followme.follow.desc", KeyEvent.VK_H, "key.followme.category");
-	private static KeyBinding STOP_KEY = new KeyBinding("key.followme.stop.desc", KeyEvent.VK_J, "key.followme.category");
+	private static KeyMapping FOLLOW_KEY = new KeyMapping("key.followme.follow.desc", KeyEvent.VK_H, "key.followme.category");
+	private static KeyMapping STOP_KEY = new KeyMapping("key.followme.stop.desc", KeyEvent.VK_J, "key.followme.category");
 
 	public static void init() {
 		 ClientRegistry.registerKeyBinding(FOLLOW_KEY);
@@ -56,16 +56,16 @@ public class ClientHandler {
 	@SubscribeEvent(priority=EventPriority.NORMAL, receiveCanceled=true)
 	public static void onEvent(KeyInputEvent event) {
 		Minecraft mc = Minecraft.getInstance();
-		PlayerEntity player = mc.player;
+		Player player = mc.player;
 		if (player!=null) {
-			World world = player.level;
+			Level world = player.level;
 			if (FOLLOW_KEY.isDown()) {
-				RayTraceResult ray = DirectionUtils.getPlayerRayTrace(world, player, 4.5f);
-				if (ray instanceof EntityRayTraceResult) {
-					Entity target = ((EntityRayTraceResult) ray).getEntity();
+				HitResult ray = DirectionUtils.getEntityRayTrace(world, player, 4.5f);
+				if (ray instanceof EntityHitResult) {
+					Entity target = ((EntityHitResult) ray).getEntity();
 					if (CommonConfigHandler.isInWhitelist(target)) {
 						if (target.isAddedToWorld() && target.isAlive()) {
-							PacketHandler.NETWORK_INSTANCE.sendToServer(new FollowMessage(player, (MobEntity) target));
+							PacketHandler.NETWORK_INSTANCE.sendToServer(new FollowMessage(player, (Mob) target));
 						}
 					}
 				}
@@ -89,20 +89,20 @@ public class ClientHandler {
 	@SubscribeEvent
 	@SuppressWarnings("unchecked")
 	public void renderLiving(RenderNameplateEvent event) {
-		if (event.getEntity() instanceof MobEntity) {
-			MobEntity entity = (MobEntity) event.getEntity();
+		if (event.getEntity() instanceof Mob) {
+			Mob entity = (Mob) event.getEntity();
 			if (FOLLOW_ENTITIES.contains(entity)) {
 				Minecraft mc = Minecraft.getInstance();
-				PlayerEntity player = mc.player;
+				Player player = mc.player;
 				if (player!=null) {
-					EntityRenderer<MobEntity> renderer = (EntityRenderer<MobEntity>) event.getEntityRenderer();
-					MatrixStack matrix = event.getMatrixStack();
-					matrix.pushPose();
-					matrix.translate(0, -0.2f, 0);
-					IFormattableTextComponent text = new TranslationTextComponent("text.followme.following");
-					text.setStyle(Style.EMPTY.withColor(Color.fromRgb(0x00FF21)));
-					renderer.renderNameTag(entity, text, matrix, event.getRenderTypeBuffer(), event.getPackedLight());
-					matrix.popPose();;
+					EntityRenderer<Mob> renderer = (EntityRenderer<Mob>) event.getEntityRenderer();
+					PoseStack pose = event.getMatrixStack();
+					pose.pushPose();
+					pose.translate(0, -0.2f, 0);
+					TranslatableComponent text = new TranslatableComponent("text.followme.following");
+					text.setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x00FF21)));
+					renderer.renderNameTag(entity, text, pose, event.getRenderTypeBuffer(), event.getPackedLight());
+					pose.popPose();
 				}
 			}
 		}
@@ -110,7 +110,7 @@ public class ClientHandler {
 
 	public static void syncFollowEntities(FollowSyncMessage message) {
 		Minecraft mc = Minecraft.getInstance();
-		MobEntity entity = message.getEntity(mc.level);
+		Mob entity = message.getEntity(mc.level);
 		if (message.isUnfollow()) {
 			ClientHandler.FOLLOW_ENTITIES.remove(entity);
 		} else {
@@ -119,8 +119,9 @@ public class ClientHandler {
 	}
 
 	public static void processEntityDeny(DenyFollowMessage message) {
-		World world = Minecraft.getInstance().level;
-		MobEntity entity = message.getEntity(world);
+		Minecraft mc = Minecraft.getInstance();
+		Level world = mc.level;
+		Mob entity = message.getEntity(world);
 		Random rand = world.random;
 		for (int i = 0; i<6; i++) {
 			world.addParticle(ParticleTypes.ANGRY_VILLAGER, entity.getX()+rand.nextFloat(), entity.getY()+(entity.getBbHeight()/2f)+rand.nextFloat(), entity.getZ()+rand.nextFloat(),0, 0.3f, 0);

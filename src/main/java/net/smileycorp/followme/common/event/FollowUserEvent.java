@@ -2,7 +2,7 @@ package net.smileycorp.followme.common.event;
 
 import java.util.Map;
 
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.Cancelable;
 import net.smileycorp.followme.common.data.DataCondition;

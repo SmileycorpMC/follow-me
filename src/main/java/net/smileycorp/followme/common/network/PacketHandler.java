@@ -1,17 +1,17 @@
 package net.smileycorp.followme.common.network;
 
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.ai.goal.PrioritizedGoal;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.Hand;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.WrappedGoal;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.network.NetworkEvent.Context;
-import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.fml.network.simple.SimpleChannel;
-import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import net.minecraftforge.fmllegacy.network.NetworkEvent.Context;
+import net.minecraftforge.fmllegacy.network.NetworkRegistry;
+import net.minecraftforge.fmllegacy.network.simple.SimpleChannel;
+import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
 import net.smileycorp.atlas.api.network.SimpleByteMessage;
 import net.smileycorp.atlas.api.network.SimpleMessageDecoder;
 import net.smileycorp.atlas.api.network.SimpleMessageEncoder;
@@ -49,18 +49,18 @@ public class PacketHandler {
 	public static void processFollowMessage(FollowMessage message, Context ctx) {
 		ctx.enqueueWork(() -> {
 			MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-			PlayerEntity player = server.getPlayerList().getPlayer(message.getPlayerUUID());
-			MobEntity entity = message.getEntity(player.level);
-			FollowHandler.processInteraction(player.level, player, entity, Hand.MAIN_HAND);});
+			Player player = server.getPlayerList().getPlayer(message.getPlayerUUID());
+			Mob entity = message.getEntity(player.level);
+			FollowHandler.processInteraction(player.level, player, entity, InteractionHand.MAIN_HAND);});
 		ctx.setPacketHandled(true);
 	}
 
 	public static void processStopFollowMessage(StopFollowMessage message, Context ctx) {
 		ctx.enqueueWork(() -> {
 			MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-			PlayerEntity player = server.getPlayerList().getPlayer(message.getPlayerUUID());
-			for (MobEntity entity : player.level.getEntitiesOfClass(MobEntity.class, player.getBoundingBox().inflate(5), (e) -> CommonConfigHandler.isInWhitelist(e))) {
-				for (PrioritizedGoal entry : entity.goalSelector.getRunningGoals().toArray(PrioritizedGoal[]::new)) {
+			Player player = server.getPlayerList().getPlayer(message.getPlayerUUID());
+			for (Mob entity : player.level.getEntitiesOfClass(Mob.class, player.getBoundingBox().inflate(5), (e) -> CommonConfigHandler.isInWhitelist(e))) {
+				for (WrappedGoal entry : entity.goalSelector.getRunningGoals().toArray(WrappedGoal[]::new)) {
 					Goal goal = entry.getGoal();
 					if (goal instanceof FollowUserGoal) {
 						if (((FollowUserGoal) goal).getUser() == player) {

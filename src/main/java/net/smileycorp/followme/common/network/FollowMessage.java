@@ -1,38 +1,37 @@
 package net.smileycorp.followme.common.network;
 
-import java.io.IOException;
 import java.util.UUID;
 
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.INetHandler;
-import net.minecraft.network.IPacket;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.World;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.PacketListener;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.smileycorp.atlas.api.network.SimpleAbstractMessage;
 import net.smileycorp.atlas.api.util.DataUtils;
 
-public class FollowMessage implements IPacket<INetHandler> {
+public class FollowMessage extends SimpleAbstractMessage {
 
 	public FollowMessage() {}
 
 	private UUID player = null;
 	private int entity = 0;
 
-	public FollowMessage(PlayerEntity player, MobEntity entity) {
+	public FollowMessage(Player player, Mob entity) {
 		this.player = player.getUUID();
 		this.entity = entity.getId();
 	}
 
 
 	@Override
-	public void read(PacketBuffer buf) throws IOException {
+	public void read(FriendlyByteBuf buf){
 		String uuid = buf.readUtf();
 		if (DataUtils.isValidUUID(uuid)) player = UUID.fromString(uuid);
 		entity = buf.readInt();
 	}
 
 	@Override
-	public void write(PacketBuffer buf) throws IOException {
+	public void write(FriendlyByteBuf buf){
 		if (player!=null)buf.writeUtf(player.toString());
 		buf.writeInt(entity);
 	}
@@ -41,12 +40,12 @@ public class FollowMessage implements IPacket<INetHandler> {
 		return player;
 	}
 
-	public MobEntity getEntity(World world) {
-		return (MobEntity) world.getEntity(entity);
+	public Mob getEntity(Level level) {
+		return (Mob) level.getEntity(entity);
 	}
 
 	@Override
-	public void handle(INetHandler handler) {}
+	public void handle(PacketListener listener) {}
 
 	@Override
 	public String toString() {

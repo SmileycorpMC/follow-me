@@ -5,17 +5,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.util.ResourceLocation;
+import org.apache.commons.lang3.ArrayUtils;
+
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
-import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
-
-import org.apache.commons.lang3.ArrayUtils;
 
 public class CommonConfigHandler {
 
@@ -65,7 +65,7 @@ public class CommonConfigHandler {
 						if (registeredEntities.isEmpty()) {
 							for (EntityType<?> entry : entityRegistry) {
 								//if we haven't already got all entity names stored get them to check against
-								Class<? extends MobEntity> eclazz = getClass(entry);
+								Class<? extends Mob> eclazz = getClass(entry);
 								registeredEntities.put(eclazz.getSimpleName(), entry);
 							}
 						} if (registeredEntities.containsKey(name)) {
@@ -87,12 +87,12 @@ public class CommonConfigHandler {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static Class<? extends MobEntity> getClass(EntityType<?> value) throws Exception {
-		return (Class<? extends MobEntity>) value.create(ServerLifecycleHooks.getCurrentServer().overworld()).getClass();
+	public static Class<? extends Mob> getClass(EntityType<?> value) throws Exception {
+		return (Class<? extends Mob>) value.create(ServerLifecycleHooks.getCurrentServer().overworld()).getClass();
 	}
 
 	public static boolean isInWhitelist(Entity entity) {
-		if (entity instanceof MobEntity) {
+		if (entity instanceof Mob) {
 			if (entity.level.isClientSide) {
 				if (entityWhitelist.contains(entity.getType())) return true;
 			} else {

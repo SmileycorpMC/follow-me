@@ -1,39 +1,37 @@
 package net.smileycorp.followme.common.network;
 
-import java.io.IOException;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.PacketListener;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.Level;
+import net.smileycorp.atlas.api.network.SimpleAbstractMessage;
 
-import net.minecraft.entity.MobEntity;
-import net.minecraft.network.INetHandler;
-import net.minecraft.network.IPacket;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.World;
-
-public class FollowSyncMessage implements IPacket<INetHandler> {
+public class FollowSyncMessage extends SimpleAbstractMessage {
 
 		public FollowSyncMessage() {}
 
 		private int entity;
 		private boolean isUnfollow;
 
-		public FollowSyncMessage(MobEntity entity, boolean isUnfollow) {
+		public FollowSyncMessage(Mob entity, boolean isUnfollow) {
 			this.entity = entity.getId();
 			this.isUnfollow = isUnfollow;
 		}
 
 		@Override
-		public void read(PacketBuffer buf) throws IOException {
+		public void read(FriendlyByteBuf buf) {
 			entity = buf.readInt();
 			isUnfollow = buf.readBoolean();
 		}
 
 		@Override
-		public void write(PacketBuffer buf) throws IOException {
+		public void write(FriendlyByteBuf buf) {
 			buf.writeInt(entity);
 			buf.writeBoolean(isUnfollow);
 		}
 
-		public MobEntity getEntity(World world) {
-			return (MobEntity) world.getEntity(entity);
+		public Mob getEntity(Level level) {
+			return (Mob) level.getEntity(entity);
 		}
 
 		public boolean isUnfollow() {
@@ -41,6 +39,6 @@ public class FollowSyncMessage implements IPacket<INetHandler> {
 		}
 
 		@Override
-		public void handle(INetHandler handler) {}
+		public void handle(PacketListener listener) {}
 
 }

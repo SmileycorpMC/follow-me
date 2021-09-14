@@ -1,10 +1,10 @@
 package net.smileycorp.followme.common.data;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
 import net.smileycorp.atlas.api.data.ComparableOperation;
 import net.smileycorp.atlas.api.data.NBTExplorer;
 
@@ -16,9 +16,9 @@ public class WorldDataCondition<T extends Comparable<T>> extends NBTDataConditio
 	}
 
 	@Override
-	protected CompoundNBT writeNBT(MobEntity entity, LivingEntity player) {
+	protected CompoundTag writeNBT(Mob entity, LivingEntity player) {
 		MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-		CompoundNBT nbt = server.getWorldData().createTag(server.registryAccess(), new CompoundNBT());
+		CompoundTag nbt = server.getWorldData().createTag(server.registryAccess(), new CompoundTag());
 		return nbt;
 	}
 

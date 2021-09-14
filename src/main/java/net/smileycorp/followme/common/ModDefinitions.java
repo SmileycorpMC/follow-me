@@ -1,6 +1,6 @@
 package net.smileycorp.followme.common;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public class ModDefinitions {
 

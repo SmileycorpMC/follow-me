@@ -1,8 +1,9 @@
 package net.smileycorp.followme.common.data;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.nbt.CompoundNBT;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.smileycorp.atlas.api.data.ComparableOperation;
 import net.smileycorp.atlas.api.data.NBTExplorer;
 import net.smileycorp.followme.common.FollowMe;
@@ -21,10 +22,10 @@ public class CompareDataCondition<T extends Comparable<T>> implements DataCondit
 	}
 
 	@Override
-	public boolean matches(MobEntity entity, LivingEntity user) {
-		CompoundNBT entityNbt = new CompoundNBT();
+	public boolean matches(Mob entity, LivingEntity user) {
+		CompoundTag entityNbt = new CompoundTag();
 		entity.saveWithoutId(entityNbt);
-		CompoundNBT playerNbt = new CompoundNBT();
+		CompoundTag playerNbt = new CompoundTag();
 		user.saveWithoutId(playerNbt);
 		try {
 			boolean result = operation.apply(entityExplorer.findValue(entityNbt), playerExplorer.findValue(playerNbt));

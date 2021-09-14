@@ -6,16 +6,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.GoalSelector;
-import net.minecraft.entity.ai.goal.PrioritizedGoal;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.GoalSelector;
+import net.minecraft.world.entity.ai.goal.WrappedGoal;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.network.NetworkDirection;
+import net.minecraftforge.fmllegacy.network.NetworkDirection;
 import net.smileycorp.followme.common.ai.FollowUserGoal;
 import net.smileycorp.followme.common.data.DataCondition;
 import net.smileycorp.followme.common.event.FollowUserEvent;
@@ -28,29 +28,29 @@ public class FollowHandler {
 	private static Map<EntityType<?>, Map<String, DataCondition>> conditions = new HashMap<EntityType<?>, Map<String, DataCondition>>();
 
 	public static void removeAI(FollowUserGoal ai) {
-		MobEntity entity = ai.getEntity();
+		Mob entity = ai.getEntity();
 		ai.stop();
 		entity.goalSelector.removeGoal(ai);
-		for (PrioritizedGoal entry : entity.goalSelector.getRunningGoals().toArray(PrioritizedGoal[]::new)) {
+		for (WrappedGoal entry : entity.goalSelector.getRunningGoals().toArray(WrappedGoal[]::new)) {
 			if (entry.isRunning()) {
 				entry.getGoal().stop();;
 			}
 		}
-		for (PrioritizedGoal entry : entity.targetSelector.getRunningGoals().toArray(PrioritizedGoal[]::new)) {
+		for (WrappedGoal entry : entity.targetSelector.getRunningGoals().toArray(WrappedGoal[]::new)) {
 			if (entry.isRunning()) {
 				entry.getGoal().stop();
 			}
 		}
-		if (ai.getUser() instanceof ServerPlayerEntity) {
-			PacketHandler.NETWORK_INSTANCE.sendTo(new FollowSyncMessage(entity, true), ((ServerPlayerEntity)ai.getUser()).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+		if (ai.getUser() instanceof ServerPlayer) {
+			PacketHandler.NETWORK_INSTANCE.sendTo(new FollowSyncMessage(entity, true), ((ServerPlayer)ai.getUser()).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
 		}
 	}
 
-	public static boolean processInteraction(World world, LivingEntity user, MobEntity entity, Hand hand) {
+	public static boolean processInteraction(Level world, LivingEntity user, Mob entity, InteractionHand hand) {
 		//checks if the entity is present in the config file
 		if (entity.getTarget() != user) {
 			//doesn't run for off hand
-			if (hand == Hand.MAIN_HAND) {
+			if (hand == InteractionHand.MAIN_HAND) {
 				//cancels if the player is on a different team to the entity
 				FollowUserEvent followEvent = new FollowUserEvent(entity, user, conditions.get(entity.getType()));
 				MinecraftForge.EVENT_BUS.post(followEvent);
@@ -59,8 +59,8 @@ public class FollowHandler {
 				if (followEvent.conditions != null) {
 					for (DataCondition condition : followEvent.conditions.values()) {
 						if (!condition.matches(entity, user))  {
-							if (user instanceof ServerPlayerEntity) PacketHandler.NETWORK_INSTANCE.sendTo(new DenyFollowMessage(entity),
-									((ServerPlayerEntity)user).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+							if (user instanceof ServerPlayer) PacketHandler.NETWORK_INSTANCE.sendTo(new DenyFollowMessage(entity),
+									((ServerPlayer)user).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
 							return false;
 						}
 					}
@@ -72,13 +72,13 @@ public class FollowHandler {
 				}
 				boolean hasGoal = false;
 				GoalSelector tasks = entity.goalSelector;
-				for (PrioritizedGoal entry : entity.goalSelector.getRunningGoals().toArray(PrioritizedGoal[]::new)) {
+				for (WrappedGoal entry : entity.goalSelector.getRunningGoals().toArray(WrappedGoal[]::new)) {
 					if (entry.getGoal() instanceof FollowUserGoal) {
 						FollowUserGoal task = (FollowUserGoal) entry.getGoal();
 						if (task.getUser() == user) {
 							removeAI(task);
-						} else if (user instanceof ServerPlayerEntity) {
-							PacketHandler.NETWORK_INSTANCE.sendTo(new DenyFollowMessage(entity), ((ServerPlayerEntity)user).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+						} else if (user instanceof ServerPlayer) {
+							PacketHandler.NETWORK_INSTANCE.sendTo(new DenyFollowMessage(entity), ((ServerPlayer)user).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
 						}
 						hasGoal= true;
 						break;
@@ -87,8 +87,8 @@ public class FollowHandler {
 				if (!hasGoal) {
 					FollowUserGoal task = new FollowUserGoal(entity, user);
 					tasks.addGoal(0, task);
-					if (user instanceof ServerPlayerEntity) {
-						PacketHandler.NETWORK_INSTANCE.sendTo(new FollowSyncMessage(entity, false), ((ServerPlayerEntity)user).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+					if (user instanceof ServerPlayer) {
+						PacketHandler.NETWORK_INSTANCE.sendTo(new FollowSyncMessage(entity, false), ((ServerPlayer)user).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
 					}
 				}
 				return true;

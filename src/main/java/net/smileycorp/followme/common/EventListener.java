@@ -1,9 +1,9 @@
 package net.smileycorp.followme.common;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -17,7 +17,7 @@ public class EventListener {
 	//activate when a player joins a server
 	@SubscribeEvent
 	public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
-		PlayerEntity player = event.getPlayer();
+		Player player = event.getPlayer();
 		if (!player.level.isClientSide) {
 			//PacketHandler.NETWORK_INSTANCE.sendTo(new SimpleByteMessage(CommonConfigHandler.getPacketData()), ((ServerPlayerEntity)player).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
 		}
@@ -26,11 +26,11 @@ public class EventListener {
 	//activate when a player right clicks an entity
 	@SubscribeEvent
 	public static void onInteractEntity(PlayerInteractEvent.EntityInteract event) {
-		World world = event.getEntity().level;
-		PlayerEntity player = event.getPlayer();
+		Level world = event.getEntity().level;
+		Player player = event.getPlayer();
 		Entity target = event.getTarget();
 		if (event.getItemStack().isEmpty() && player.isCrouching() && CommonConfigHandler.isInWhitelist(target) && !world.isClientSide) {
-			FollowHandler.processInteraction(world, player, (MobEntity) target, event.getHand());
+			FollowHandler.processInteraction(world, player, (Mob) target, event.getHand());
 		}
 	}
 

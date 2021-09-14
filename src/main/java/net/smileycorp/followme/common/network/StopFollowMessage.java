@@ -1,33 +1,32 @@
 package net.smileycorp.followme.common.network;
 
-import java.io.IOException;
 import java.util.UUID;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.INetHandler;
-import net.minecraft.network.IPacket;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.PacketListener;
+import net.minecraft.world.entity.player.Player;
+import net.smileycorp.atlas.api.network.SimpleAbstractMessage;
 import net.smileycorp.atlas.api.util.DataUtils;
 
-public class StopFollowMessage implements IPacket<INetHandler> {
+public class StopFollowMessage extends SimpleAbstractMessage {
 
 	public StopFollowMessage() {}
 
 	private UUID player = null;
 
-	public StopFollowMessage(PlayerEntity player) {
+	public StopFollowMessage(Player player) {
 		this.player = player.getUUID();
 	}
 
 
 	@Override
-	public void read(PacketBuffer buf) throws IOException {
+	public void read(FriendlyByteBuf buf) {
 		String uuid = buf.readUtf();
 		if (DataUtils.isValidUUID(uuid)) player = UUID.fromString(uuid);
 	}
 
 	@Override
-	public void write(PacketBuffer buf) throws IOException {
+	public void write(FriendlyByteBuf buf) {
 		if (player!=null)buf.writeUtf(player.toString());
 	}
 
@@ -36,7 +35,7 @@ public class StopFollowMessage implements IPacket<INetHandler> {
 	}
 
 	@Override
-	public void handle(INetHandler handler) {}
+	public void handle(PacketListener listener) {}
 
 	@Override
 	public String toString() {
