@@ -1,10 +1,11 @@
 {
   "homepage": "https://www.curseforge.com/minecraft/mc-mods/follow-me",
   "1.17.1": {
-    "1.1.6": "Port to 1.17.1"
+    "1.1.6": "Port to 1.17.1",
+	"1.1.7": "Improved follow ai logic, added more config options for client display and teleporting"
   },
   "promos": {
-    "1.17.1-latest": "1.1.6",
-    "1.17.1-recommended": "1.1.6"
+    "1.17.1-latest": "1.1.7",
+    "1.17.1-recommended": "1.1.7"
   }
 }

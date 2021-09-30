@@ -46,7 +46,7 @@ public class FollowHandler {
 		}
 	}
 
-	public static boolean processInteraction(Level world, LivingEntity user, Mob entity, InteractionHand hand) {
+	public static boolean processInteraction(Level level, LivingEntity user, Mob entity, InteractionHand hand) {
 		//checks if the entity is present in the config file
 		if (entity.getTarget() != user) {
 			//doesn't run for off hand

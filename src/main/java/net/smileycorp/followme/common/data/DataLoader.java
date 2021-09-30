@@ -128,7 +128,7 @@ public class DataLoader extends SimpleJsonResourceReloadListener {
 					return new UserDataCondition(explorer, value, operation);
 				} else if (mode.equals("entity_nbt")) {
 					return new EntityDataCondition(explorer, value, operation);
-				} else if (mode.equals("world_nbt")) {
+				} else if (mode.equals("world_nbt") || mode.equals("level_nbt")) {
 					return new WorldDataCondition(explorer, value, operation);
 				} else if (mode.equals("compare_nbt")) {
 					return new CompareDataCondition(explorer, new NBTExplorer((String) value, type), operation);

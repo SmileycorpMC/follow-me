@@ -26,11 +26,11 @@ public class EventListener {
 	//activate when a player right clicks an entity
 	@SubscribeEvent
 	public static void onInteractEntity(PlayerInteractEvent.EntityInteract event) {
-		Level world = event.getEntity().level;
+		Level level = event.getEntity().level;
 		Player player = event.getPlayer();
 		Entity target = event.getTarget();
-		if (event.getItemStack().isEmpty() && player.isCrouching() && CommonConfigHandler.isInWhitelist(target) && !world.isClientSide) {
-			FollowHandler.processInteraction(world, player, (Mob) target, event.getHand());
+		if (event.getItemStack().isEmpty() && player.isCrouching() && CommonConfigHandler.isInWhitelist(target) && !level.isClientSide) {
+			FollowHandler.processInteraction(level, player, (Mob) target, event.getHand());
 		}
 	}
 

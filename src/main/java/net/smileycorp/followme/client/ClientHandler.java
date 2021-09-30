@@ -15,6 +15,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
@@ -42,6 +43,8 @@ import net.smileycorp.followme.common.network.StopFollowMessage;
 
 @EventBusSubscriber(modid = ModDefinitions.MODID, value = Dist.CLIENT)
 public class ClientHandler {
+	
+	private static ResourceLocation SPEECH_BUBBLE = ModDefinitions.getResource("textures/gui/follow.png");
 
 	public static Set<Mob> FOLLOW_ENTITIES = new HashSet<Mob>();
 
@@ -58,9 +61,9 @@ public class ClientHandler {
 		Minecraft mc = Minecraft.getInstance();
 		Player player = mc.player;
 		if (player!=null) {
-			Level world = player.level;
+			Level level = player.level;
 			if (FOLLOW_KEY.isDown()) {
-				HitResult ray = DirectionUtils.getEntityRayTrace(world, player, 4.5f);
+				HitResult ray = DirectionUtils.getEntityRayTrace(level, player, 4.5f);
 				if (ray instanceof EntityHitResult) {
 					Entity target = ((EntityHitResult) ray).getEntity();
 					if (CommonConfigHandler.isInWhitelist(target)) {
@@ -77,7 +80,7 @@ public class ClientHandler {
 	}
 
 	@SubscribeEvent
-	public void onWorldUnload(WorldEvent.Unload event) {
+	public void onlevelUnload(WorldEvent.Unload event) {
 		if (event.getWorld().isClientSide()) {
 			FOLLOW_ENTITIES.clear();
 			CommonConfigHandler.resetConfigSync();
@@ -100,7 +103,11 @@ public class ClientHandler {
 					pose.pushPose();
 					pose.translate(0, -0.2f, 0);
 					TranslatableComponent text = new TranslatableComponent("text.followme.following");
-					text.setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x00FF21)));
+					TextColor colour = ClientConfigHandler.getFollowMessageColour();
+					if (ClientConfigHandler.followMessageUseTeamColour.get() && entity.getTeam()!=null) {
+						colour = TextColor.fromLegacyFormat(entity.getTeam().getColor());
+					}
+					text.setStyle(Style.EMPTY.withColor(colour));
 					renderer.renderNameTag(entity, text, pose, event.getRenderTypeBuffer(), event.getPackedLight());
 					pose.popPose();
 				}
@@ -120,13 +127,13 @@ public class ClientHandler {
 
 	public static void processEntityDeny(DenyFollowMessage message) {
 		Minecraft mc = Minecraft.getInstance();
-		Level world = mc.level;
-		Mob entity = message.getEntity(world);
-		Random rand = world.random;
+		Level level = mc.level;
+		Mob entity = message.getEntity(level);
+		Random rand = level.random;
 		for (int i = 0; i<6; i++) {
-			world.addParticle(ParticleTypes.ANGRY_VILLAGER, entity.getX()+rand.nextFloat(), entity.getY()+(entity.getBbHeight()/2f)+rand.nextFloat(), entity.getZ()+rand.nextFloat(),0, 0.3f, 0);
+			level.addParticle(ParticleTypes.ANGRY_VILLAGER, entity.getX()+rand.nextFloat(), entity.getY()+(entity.getBbHeight()/2f)+rand.nextFloat(), entity.getZ()+rand.nextFloat(),0, 0.3f, 0);
 		}
-		world.playLocalSound(entity.getX(), entity.getY(), entity.getZ(), SoundEvents.VILLAGER_NO, entity.getSoundSource(), 0.3f, rand.nextFloat(), false);
+		level.playLocalSound(entity.getX(), entity.getY(), entity.getZ(), SoundEvents.VILLAGER_NO, entity.getSoundSource(), 0.3f, rand.nextFloat(), false);
 	}
 
 }

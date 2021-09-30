@@ -7,12 +7,15 @@ import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import com.google.common.collect.Lists;
+
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
+import net.minecraftforge.common.ForgeConfigSpec.DoubleValue;
 import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -25,14 +28,19 @@ public class CommonConfigHandler {
 	protected static List<EntityType<?>> localEntityWhitelist = null;
 
 	protected static ConfigValue<List<String>> entityWhitelistBuilder;
+	public static ConfigValue<Boolean> shouldTeleport;
+	public static DoubleValue teleportDistance;
 
 	private static IForgeRegistry<EntityType<?>> entityRegistry = ForgeRegistries.ENTITIES;
 
 	static {
 		builder.push("general");
-		List<String> defaultWhitelist = new ArrayList<String>();
 		entityWhitelistBuilder = builder.comment("Entities that follow the player after sneak right-clicked. (uses the string format and either classname e.g. \"VillagerEntity\" or registry name e.g. \"minecraft:villager\")")
-				.define("entityWhitelist", defaultWhitelist);
+				.define("entityWhitelist", Lists.newArrayList());
+		shouldTeleport = builder.comment("Should following entities teleport when too far away (like wolves)?")
+				.define("shouldTeleport", true);
+		teleportDistance = builder.comment("How far away do entities need to be away to teleport?")
+				.defineInRange("teleportDistance", 30d, 0, 255);
 		builder.pop();
 		config = builder.build();
 	}
