@@ -38,13 +38,13 @@ public class FollowUserGoal extends Goal {
 
 	@Override
 	public boolean canUse() {
-		return !(user.isSpectator() && entity.distanceToSqr(user) < this.min * this.min);
+		return !user.isSpectator() && entity.distanceTo(user)>1f;
 	}
 
 	@Override
 	public boolean canContinueToUse() {
 		if (super.canContinueToUse()) {
-			if (this.entity.getNavigation().isDone() && (this.entity.distanceToSqr(this.user) > this.max * this.max) && entity.getTarget() != user && user.isAddedToWorld());
+			if (this.entity.getNavigation().isDone() && (this.entity.distanceToSqr(this.user) > this.max * this.max) && entity.getTarget() != user && user.isAddedToWorld() &! user.isDeadOrDying());
 			if (user.getTeam() != null && entity.getTeam() != null) {
 				if (user.getTeam().isAlliedTo(entity.getTeam())) return true;
 			} else {
