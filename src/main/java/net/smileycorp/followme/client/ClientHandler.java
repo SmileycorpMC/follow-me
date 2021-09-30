@@ -111,7 +111,7 @@ public class ClientHandler {
 						text.setStyle(Style.EMPTY.withColor(colour));
 						renderer.renderNameTag(entity, text, matrix, event.getRenderTypeBuffer(), event.getPackedLight());
 					}
-					matrix.popPose();;
+					matrix.popPose();
 				}
 			}
 		}
