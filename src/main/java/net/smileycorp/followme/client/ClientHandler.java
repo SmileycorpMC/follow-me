@@ -16,6 +16,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.text.Color;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -26,7 +27,6 @@ import net.minecraftforge.client.event.RenderNameplateEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.client.gui.GuiUtils;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.smileycorp.atlas.api.util.DirectionUtils;
@@ -44,7 +44,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 @EventBusSubscriber(modid = ModDefinitions.MODID, value = Dist.CLIENT)
 public class ClientHandler {
 
-	private ResourceLocation SPEECH_BUBBLE = ModDefinitions.getResource("textures/gui/follow.png");
+	private static ResourceLocation SPEECH_BUBBLE = ModDefinitions.getResource("textures/gui/follow.png");
 
 	public static Set<MobEntity> FOLLOW_ENTITIES = new HashSet<MobEntity>();
 
@@ -90,7 +90,7 @@ public class ClientHandler {
 
 
 	@SubscribeEvent
-	@SuppressWarnings({ "unchecked", "deprecation" })
+	@SuppressWarnings("unchecked")
 	public void renderLiving(RenderNameplateEvent event) {
 		if (event.getEntity() instanceof MobEntity) {
 			MobEntity entity = (MobEntity) event.getEntity();
@@ -104,10 +104,12 @@ public class ClientHandler {
 					if (ClientConfigHandler.followRenderMode.get() == 1) {
 						matrix.translate(0, -0.2f, 0);
 						IFormattableTextComponent text = new TranslationTextComponent("text.followme.following");
-						text.setStyle(Style.EMPTY.withColor(ClientConfigHandler.getFollowMessageColour()));
+						Color colour = ClientConfigHandler.getFollowMessageColour();
+						if (ClientConfigHandler.followMessageUseTeamColour.get() && entity.getTeam()!=null) {
+							colour = Color.fromLegacyFormat(entity.getTeam().getColor());
+						}
+						text.setStyle(Style.EMPTY.withColor(colour));
 						renderer.renderNameTag(entity, text, matrix, event.getRenderTypeBuffer(), event.getPackedLight());
-					} else if (ClientConfigHandler.followRenderMode.get() == 2) {
-						GuiUtils.drawContinuousTexturedBox(SPEECH_BUBBLE, (int) entity.getX(), (int) entity.getY(), 0, 0, 32, 32, 32, 32, 0, (int) entity.getZ());
 					}
 					matrix.popPose();;
 				}

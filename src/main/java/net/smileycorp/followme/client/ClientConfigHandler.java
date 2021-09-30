@@ -16,21 +16,24 @@ public class ClientConfigHandler {
 	private static Color followMessageColour = null;
 
 	public static ConfigValue<Integer> followRenderMode;
-	private static ConfigValue<List<Integer>> configFollowMessageColour;
+	private static ConfigValue<List<? extends Integer>> configFollowMessageColour;
+	public static ConfigValue<Boolean> followMessageUseTeamColour;
 
 	static {
 		builder.push("general");
-		followRenderMode = builder.comment("How to show an entity is following the player (0: no rendering, 1 message below nameplate, 2 speech bubble")
+		followRenderMode = builder.comment("How to show an entity is following the player (0: no rendering, 1 message below nameplate")
 				.define("followRenderMode", 1);
-		configFollowMessageColour = builder.comment("Colour of the following text in the rgb format.}")
-				.define("followMessageColour", Lists.asList(0, new Integer[]{255, 33}));
+		configFollowMessageColour = builder.comment("Colour of the following text in the rgb format.")
+				.defineList("followMessageColour", Lists.asList(0, new Integer[]{255, 33}), (x) -> (Integer)x>=0 && (Integer)x<256);
+		followMessageUseTeamColour = builder.comment("Use the entities team colour for the follow message")
+				.define("followMessageUseTeamColour", true);
 		builder.pop();
 		config = builder.build();
 	}
 
 	public static Color getFollowMessageColour() {
 		if (followMessageColour == null) {
-			List<Integer> rgb = configFollowMessageColour.get();
+			List<? extends Integer> rgb = configFollowMessageColour.get();
 			if (rgb.size() >= 3) followMessageColour = Color.fromRgb((rgb.get(0) << 16) + (rgb.get(1) << 8) + rgb.get(2));
 			else followMessageColour = Color.fromRgb(0);
 		}
