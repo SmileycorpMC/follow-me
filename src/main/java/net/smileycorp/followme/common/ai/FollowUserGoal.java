@@ -41,9 +41,10 @@ public class FollowUserGoal extends Goal {
 	@Override
 	public boolean canUse() {
 		boolean canUse = false;
-		if (entity.getTarget() != user && user.isAddedToWorld() &! user.isDeadOrDying() &! user.isSpectator()) {
+		if (entity.getTarget() != user && user.isAddedToWorld() &! user.isDeadOrDying() 
+				&! user.isSpectator() && entity.distanceTo(user) < CommonConfigHandler.stopFollowDistance.get()) {
 			if (user.getTeam() != null && entity.getTeam() != null) canUse = (user.getTeam().isAlliedTo(entity.getTeam()));
-			else if (user.getTeam() == entity.getTeam() || user.getTeam()!=null)canUse = true;
+			else if (user.getTeam() == entity.getTeam() || user.getTeam()!=null) canUse = true;
 			else canUse = false;
 		}
 		//schedule removal of this ai
@@ -59,13 +60,13 @@ public class FollowUserGoal extends Goal {
 	@Override
 	public void stop() {
         pather.stop();
-        entity.setPathfindingMalus(BlockPathTypes.WATER, this.waterCost);
+        entity.setPathfindingMalus(BlockPathTypes.WATER, waterCost);
     }
 
 	@Override
 	public void tick() {
-	    if (--this.timeToRecalcPath <= 0)  {
-	        this.timeToRecalcPath = 5;
+	    if (--timeToRecalcPath <= 0)  {
+	        timeToRecalcPath = 5;
 	        if (entity.distanceTo(user) > min) {
 	        	Vec3 dir = DirectionUtils.getDirectionVecXZ(user, entity);
 	        	Path path = pather.createPath(user.blockPosition().offset(Math.round(dir.x), 0, Math.round(dir.z)), 1);
@@ -73,7 +74,7 @@ public class FollowUserGoal extends Goal {
 	        }
         }
 	    if (CommonConfigHandler.shouldTeleport.get()) {
-	    	if (this.entity.distanceTo(user) >= max) {
+	    	if (entity.distanceTo(user) >= max) {
 	        	if (!entity.isLeashed() && entity.getVehicle() == null) {
 	            	Vec3 dir = DirectionUtils.getDirectionVecXZ(user, entity);
 	                int x = (int) (Math.round(user.getX() + 2*dir.x));
@@ -92,14 +93,14 @@ public class FollowUserGoal extends Goal {
 	                }
 	        	}
 	    	}
-        }
+	    }
     }
 	
 	private boolean canTeleportTo(BlockPos pos) {
-	      BlockPathTypes pathnodetype = WalkNodeEvaluator.getBlockPathTypeStatic(this.level, pos.mutable());
+	      BlockPathTypes pathnodetype = WalkNodeEvaluator.getBlockPathTypeStatic(level, pos.mutable());
 	      if (pathnodetype != BlockPathTypes.WALKABLE) return false;
         BlockPos blockpos = pos.subtract(entity.blockPosition());
-        return !this.level.getBlockCollisions(entity, entity.getBoundingBox().move(blockpos)).findAny().isPresent();
+        return !level.getBlockCollisions(entity, entity.getBoundingBox().move(blockpos)).findAny().isPresent();
 	}
 
 	public LivingEntity getUser() {
