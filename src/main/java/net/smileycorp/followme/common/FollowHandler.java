@@ -31,16 +31,6 @@ public class FollowHandler {
 		MobEntity entity = ai.getEntity();
 		ai.stop();
 		entity.goalSelector.removeGoal(ai);
-		for (PrioritizedGoal entry : entity.goalSelector.getRunningGoals().toArray(PrioritizedGoal[]::new)) {
-			if (entry.isRunning()) {
-				entry.getGoal().stop();;
-			}
-		}
-		for (PrioritizedGoal entry : entity.targetSelector.getRunningGoals().toArray(PrioritizedGoal[]::new)) {
-			if (entry.isRunning()) {
-				entry.getGoal().stop();
-			}
-		}
 		if (ai.getUser() instanceof ServerPlayerEntity) {
 			PacketHandler.NETWORK_INSTANCE.sendTo(new FollowSyncMessage(entity, true), ((ServerPlayerEntity)ai.getUser()).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
 		}

@@ -7,10 +7,11 @@
 	"1.1.5": "added conditions datapack functionality, added event for other mod developers",
 	"1.1.6": "fixed datapack crash, added extra support for addons",
 	"1.1.6a": "fixed issue that asumed mob was following a player",
-	"1.1.7": "improved follow ai logic, added more config options for client display and teleporting"
+	"1.1.7": "improved follow ai logic, added more config options for client display and teleporting",
+	"1.1.7a": "added method and config option to remove ai from mobs far away"
   },
   "promos": {
-    "1.16.5-latest": "1.1.7",
-    "1.16.5-recommended": "1.1.7"
+    "1.16.5-latest": "1.1.7a",
+    "1.16.5-recommended": "1.1.7a"
   }
 }

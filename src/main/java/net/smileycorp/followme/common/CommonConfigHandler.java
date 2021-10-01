@@ -30,6 +30,7 @@ public class CommonConfigHandler {
 	protected static ConfigValue<List<String>> entityWhitelistBuilder;
 	public static ConfigValue<Boolean> shouldTeleport;
 	public static DoubleValue teleportDistance;
+	public static DoubleValue stopFollowDistance;
 
 	private static IForgeRegistry<EntityType<?>> entityRegistry = ForgeRegistries.ENTITIES;
 
@@ -41,6 +42,8 @@ public class CommonConfigHandler {
 				.define("shouldTeleport", true);
 		teleportDistance = builder.comment("How far away do entities need to be away to teleport?")
 				.defineInRange("teleportDistance", 30d, 0, 255);
+		stopFollowDistance = builder.comment("How far away do entities need to be away to stop following?")
+				.defineInRange("stopFollowDistance", 60d, 0, 255);
 		builder.pop();
 		config = builder.build();
 	}
