@@ -3,10 +3,11 @@
   "1.17.1": {
     "1.1.6": "Port to 1.17.1",
 	"1.1.7": "Improved follow ai logic, added more config options for client display and teleporting",
-	"1.1.7a": "Added method and config option to remove ai from mobs far away"
+	"1.1.7a": "Added method and config option to remove ai from mobs far away",
+	"1.1.7b": "Port missing fix from 1.16.5-1.1.7a"
   },
   "promos": {
-    "1.17.1-latest": "1.1.7",
-    "1.17.1-recommended": "1.1.7"
+    "1.17.1-latest": "1.1.7b",
+    "1.17.1-recommended": "1.1.7b"
   }
 }
