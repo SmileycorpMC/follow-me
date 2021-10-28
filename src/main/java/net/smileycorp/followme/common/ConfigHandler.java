@@ -1,5 +1,6 @@
 package net.smileycorp.followme.common;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,14 +17,15 @@ import net.minecraftforge.registries.GameData;
 import org.apache.commons.lang3.ArrayUtils;
 
 public class ConfigHandler {
-	
+
 	static Configuration config;
 	protected static List<Class<? extends EntityLiving>> entityWhitelist = new ArrayList<Class<? extends EntityLiving>>();
 	protected final static List<Class<? extends EntityLiving>> localEntityWhitelist = new ArrayList<Class<? extends EntityLiving>>();
 	protected static Property entityWhitelistProp;
-	
+
 	//load config properties
-	public static void syncConfig() {
+	public static void syncConfig(File file) {
+		config = new Configuration(file);
 		FollowMe.logInfo("Trying to load config");
 		try{
 			config.load();
@@ -31,10 +33,11 @@ public class ConfigHandler {
 					new String[]{}, "(Serverside) Entities that follow the player after sneak right-clicked. (uses either classname e.g. EntityZombie or registry name e.g. minecraft:zombie)");
 		} catch(Exception e) {
 		} finally {
-	    	if (config.hasChanged()) config.save();
+			if (config.hasChanged()) config.save();
 		}
 	}
-	
+
+	@SuppressWarnings("unchecked")
 	public static void initWhitelist() {
 		FollowMe.logInfo("Trying to read config");
 		try {
@@ -46,11 +49,11 @@ public class ConfigHandler {
 			}
 			//stores all registered entities to check against
 			Map<String, Class<? extends Entity>> registeredEntities = new HashMap<String, Class<? extends Entity>>();
-			
+
 			for (String name : entityWhitelistProp.getStringList()) {
 				//if we haven't already got all entity names stored get them to check against
 				try {
-					Class clazz;
+					Class<?> clazz;
 					//check if it matches they syntax for a registry name
 					if (name.contains(":")) {
 						String[] nameSplit = name.split(":");
@@ -72,9 +75,9 @@ public class ConfigHandler {
 							throw new Exception("Entity " + name + " is not registered");
 						}
 					}
-					//check if the entity is 
+					//check if the entity is
 					if (EntityLiving.class.isAssignableFrom(clazz)) {
-						localEntityWhitelist.add(clazz);
+						localEntityWhitelist.add((Class<? extends EntityLiving>) clazz);
 						FollowMe.logInfo("Loaded entity " + name + " as " + clazz.getName());
 					} else {
 						throw new Exception("Entity " + name + " is not an instance of EntityLiving");
@@ -99,7 +102,7 @@ public class ConfigHandler {
 		}
 		return false;
 	}
-	
+
 	public static byte[] getPacketData() {
 		byte[] bytes = {};
 		//String data = "";
@@ -110,6 +113,7 @@ public class ConfigHandler {
 		return bytes;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static void syncClient(byte[] data) {
 		List<Class<? extends EntityLiving>> whitelist = new ArrayList<Class<? extends EntityLiving>>();
 		//clean byte data of empty bytes
@@ -119,8 +123,8 @@ public class ConfigHandler {
 		}
 		for (String name : new String(bytes).split(";")) {
 			try {
-				Class clazz = Class.forName(name);
-				whitelist.add(clazz);
+				Class<?> clazz = Class.forName(name);
+				whitelist.add((Class<? extends EntityLiving>) clazz);
 				FollowMe.logInfo("Synced config entity " + name + " from server");
 			} catch(Exception e) {
 				FollowMe.logError("Failed to sync config entity " + name + " from server " + e.getCause(), e);
@@ -131,6 +135,6 @@ public class ConfigHandler {
 
 	public static void resetConfigSync() {
 		entityWhitelist.clear();
-	}	
-	
+	}
+
 }

@@ -2,6 +2,7 @@ package net.smileycorp.followme.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.EntityRenderer;
@@ -11,7 +12,12 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.text.translation.I18n;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -25,6 +31,7 @@ import net.smileycorp.atlas.api.util.DirectionUtils;
 import net.smileycorp.followme.common.ConfigHandler;
 import net.smileycorp.followme.common.FollowMe;
 import net.smileycorp.followme.common.ModDefinitions;
+import net.smileycorp.followme.common.network.DenyFollowMessage;
 import net.smileycorp.followme.common.network.FollowMessage;
 import net.smileycorp.followme.common.network.PacketHandler;
 import net.smileycorp.followme.common.network.StopFollowMessage;
@@ -33,15 +40,15 @@ import org.lwjgl.input.Keyboard;
 
 @EventBusSubscriber(value = Side.CLIENT, modid = ModDefinitions.modid)
 public class ClientHandler {
-	
+
 	public static List<EntityLiving> FOLLOW_ENTITIES = new ArrayList<EntityLiving>();
-	
+
 	private static KeyBinding FOLLOW_KEY = new KeyBinding("key.followme.follow.desc", Keyboard.KEY_H, "key.followme.category");
 	private static KeyBinding STOP_KEY = new KeyBinding("key.followme.stop.desc", Keyboard.KEY_J, "key.followme.category");
 
 	public static void preInit() {
-		 ClientRegistry.registerKeyBinding(FOLLOW_KEY);
-		 ClientRegistry.registerKeyBinding(STOP_KEY);
+		ClientRegistry.registerKeyBinding(FOLLOW_KEY);
+		ClientRegistry.registerKeyBinding(STOP_KEY);
 	}
 
 	@SubscribeEvent(priority=EventPriority.NORMAL, receiveCanceled=true)
@@ -65,7 +72,7 @@ public class ClientHandler {
 			}
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void onWorldUnload(WorldEvent.Unload event) {
 		if (event.getWorld().isRemote) {
@@ -74,7 +81,7 @@ public class ClientHandler {
 			FollowMe.logInfo("Cleared config from server.");
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void renderLiving(RenderLivingEvent.Post<EntityLiving> event) {
 		if (event.getEntity() instanceof EntityLiving) {
@@ -83,14 +90,33 @@ public class ClientHandler {
 				Minecraft mc = Minecraft.getMinecraft();
 				EntityPlayer player = mc.player;
 				if (player!=null) {
-		            RenderLivingBase<EntityLiving> renderer = event.getRenderer();
-		            RenderManager manager = renderer.getRenderManager();
-		            boolean thirdPerson = manager.options.thirdPersonView == 2;
-		            float f2 = entity.height + 0.3f;
-		            EntityRenderer.drawNameplate(manager.getFontRenderer(), I18n.translateToLocal("text.followme.following"), (float)event.getX(), (float)event.getY() + f2, (float)event.getZ(), 0, manager.playerViewY, manager.playerViewX, thirdPerson, false);
+					RenderLivingBase<EntityLiving> renderer = event.getRenderer();
+					if (ClientConfigHandler.followRenderMode == 1) {
+						RenderManager manager = renderer.getRenderManager();
+						boolean thirdPerson = manager.options.thirdPersonView == 2;
+						float f2 = entity.height + 0.3f;
+						ITextComponent text = new TextComponentTranslation("text.followme.following");
+						TextFormatting colour = ClientConfigHandler.getFollowMessageColour();
+						if (ClientConfigHandler.followMessageUseTeamColour && entity.getTeam()!=null) {
+							colour = entity.getTeam().getColor();
+						}
+						text.setStyle(new Style().setColor(colour));
+						EntityRenderer.drawNameplate(manager.getFontRenderer(), text.getFormattedText(), (float)event.getX(), (float)event.getY() + f2, (float)event.getZ(),
+								0, manager.playerViewY, manager.playerViewX, thirdPerson, false);
+					}
 				}
 			}
 		}
 	}
-	
+
+	public static void processEntityDeny(DenyFollowMessage message) {
+		World world = Minecraft.getMinecraft().world;
+		EntityLiving entity = message.getEntity(world);
+		Random rand = world.rand;
+		for (int i = 0; i<6; i++) {
+			world.spawnParticle(EnumParticleTypes.VILLAGER_ANGRY, entity.posX+rand.nextFloat(), entity.posY+(entity.height/2f)+rand.nextFloat(), entity.posZ+rand.nextFloat(),0, 0.3f, 0);
+		}
+		world.playSound(entity.posX, entity.posY, entity.posZ, SoundEvents.ENTITY_VILLAGER_NO, entity.getSoundCategory(), 0.3f, rand.nextFloat(), false);
+	}
+
 }

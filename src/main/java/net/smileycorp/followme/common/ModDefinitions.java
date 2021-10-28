@@ -4,6 +4,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
+import net.smileycorp.followme.common.ai.AIFollowPlayer;
 
 public class ModDefinitions {
 	
@@ -13,7 +14,7 @@ public class ModDefinitions {
 	public static final String dependencies = "required-after:atlaslib@1.1.3d;";
 	
 	public static ITextComponent getFollowText(String str, AIFollowPlayer task) {
-		ITextComponent result = new TextComponentTranslation("message.followme."+str, new Object[]{task.getEntity().getName(), task.getPlayer().getName()});
+		ITextComponent result = new TextComponentTranslation("message.followme."+str, new Object[]{task.getEntity().getName(), task.getUser().getName()});
 		result.setStyle(new Style().setColor(TextFormatting.AQUA));
 		return result;
 	}

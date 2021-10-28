@@ -15,25 +15,25 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.smileycorp.atlas.api.SimpleByteMessage;
 import net.smileycorp.followme.client.ClientHandler;
-import net.smileycorp.followme.common.AIFollowPlayer;
 import net.smileycorp.followme.common.ConfigHandler;
-import net.smileycorp.followme.common.EventListener;
 import net.smileycorp.followme.common.FollowMe;
 import net.smileycorp.followme.common.ModDefinitions;
+import net.smileycorp.followme.common.ai.AIFollowPlayer;
 
 import com.google.common.base.Predicate;
 
 public class PacketHandler {
-	
+
 	public static final SimpleNetworkWrapper NETWORK_INSTANCE = NetworkRegistry.INSTANCE.newSimpleChannel(ModDefinitions.modid);
-	
+
 	public static void initPackets() {
 		NETWORK_INSTANCE.registerMessage(ConfigSyncHandler.class, SimpleByteMessage.class, 0, Side.CLIENT);
 		NETWORK_INSTANCE.registerMessage(FollowHandler.class, FollowMessage.class, 1, Side.SERVER);
 		NETWORK_INSTANCE.registerMessage(StopFollowHandler.class, StopFollowMessage.class, 2, Side.SERVER);
 		NETWORK_INSTANCE.registerMessage(FollowSyncHandler.class, FollowSyncMessage.class, 3, Side.CLIENT);
+		NETWORK_INSTANCE.registerMessage(DenyFollowHandler.class, DenyFollowMessage.class, 4, Side.CLIENT);
 	}
-	
+
 	public static class ConfigSyncHandler implements IMessageHandler<SimpleByteMessage, IMessage> {
 
 		public ConfigSyncHandler() {}
@@ -46,7 +46,7 @@ public class PacketHandler {
 			return null;
 		}
 	}
-	
+
 	public static class FollowHandler implements IMessageHandler<FollowMessage, IMessage> {
 
 		public FollowHandler() {}
@@ -58,13 +58,13 @@ public class PacketHandler {
 				server.addScheduledTask(() -> {
 					EntityPlayer player = server.getPlayerList().getPlayerByUUID(message.getPlayerUUID());
 					EntityLiving entity = message.getEntity(player.world);
-					EventListener.processInteraction(player.world, player, entity, EnumHand.MAIN_HAND);
+					net.smileycorp.followme.common.FollowHandler.processInteraction(player.world, player, entity, EnumHand.MAIN_HAND);
 				});
 			}
 			return null;
 		}
 	}
-	
+
 	public static class StopFollowHandler implements IMessageHandler<StopFollowMessage, IMessage> {
 
 		public StopFollowHandler() {}
@@ -83,8 +83,8 @@ public class PacketHandler {
 					})) {
 						for (EntityAITaskEntry ai : entity.tasks.taskEntries) {
 							if (ai.action instanceof AIFollowPlayer) {
-								if (((AIFollowPlayer) ai.action).getPlayer() == player) {
-									FollowMe.DELAYED_THREAD_EXECUTOR.execute(() -> FollowMe.removeAI((AIFollowPlayer) ai.action));
+								if (((AIFollowPlayer) ai.action).getUser() == player) {
+									FollowMe.DELAYED_THREAD_EXECUTOR.execute(() -> net.smileycorp.followme.common.FollowHandler.removeAI((AIFollowPlayer) ai.action));
 								}
 							}
 						}
@@ -94,7 +94,7 @@ public class PacketHandler {
 			return null;
 		}
 	}
-	
+
 	public static class FollowSyncHandler implements IMessageHandler<FollowSyncMessage, IMessage> {
 
 		public FollowSyncHandler() {}
@@ -109,6 +109,22 @@ public class PacketHandler {
 					} else {
 						ClientHandler.FOLLOW_ENTITIES.add(message.getEntity(mc.world));
 					}
+				});
+			}
+			return null;
+		}
+	}
+
+	public static class DenyFollowHandler implements IMessageHandler<DenyFollowMessage, IMessage> {
+
+		public DenyFollowHandler() {}
+
+		@Override
+		public IMessage onMessage(DenyFollowMessage message, MessageContext ctx) {
+			if (ctx.side == Side.CLIENT) {
+				Minecraft mc = Minecraft.getMinecraft();
+				mc.addScheduledTask(() -> {
+					ClientHandler.processEntityDeny(message);
 				});
 			}
 			return null;
