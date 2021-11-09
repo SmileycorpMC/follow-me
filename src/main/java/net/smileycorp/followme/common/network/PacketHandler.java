@@ -104,11 +104,7 @@ public class PacketHandler {
 			if (ctx.side == Side.CLIENT) {
 				Minecraft mc = Minecraft.getMinecraft();
 				mc.addScheduledTask(() -> {
-					if (message.isUnfollow()) {
-						ClientHandler.FOLLOW_ENTITIES.remove(message.getEntity(mc.world));
-					} else {
-						ClientHandler.FOLLOW_ENTITIES.add(message.getEntity(mc.world));
-					}
+					ClientHandler.syncClient(message);
 				});
 			}
 			return null;

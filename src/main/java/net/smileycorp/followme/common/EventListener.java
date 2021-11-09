@@ -33,7 +33,7 @@ public class EventListener {
 		EntityPlayer player = event.getEntityPlayer();
 		Entity target = DirectionUtils.getPlayerRayTrace(world, player, 4.5f).entityHit;
 		if (player.isSneaking() && target instanceof EntityLiving) {
-			if (net.smileycorp.followme.common.FollowHandler.processInteraction(world, player, (EntityLiving) target, event.getHand())) {
+			if (FollowHandler.processInteraction(world, player, (EntityLiving) target, event.getHand())) {
 				event.setCancellationResult(EnumActionResult.FAIL);
 				event.setCanceled(true);
 			}
@@ -47,7 +47,7 @@ public class EventListener {
 		EntityPlayer player = event.getEntityPlayer();
 		Entity target = event.getTarget();
 		if (event.getItemStack().isEmpty() && player.isSneaking() && target instanceof EntityLiving) {
-			net.smileycorp.followme.common.FollowHandler.processInteraction(world, player, (EntityLiving) target, event.getHand());
+			FollowHandler.processInteraction(world, player, (EntityLiving) target, event.getHand());
 		}
 	}
 

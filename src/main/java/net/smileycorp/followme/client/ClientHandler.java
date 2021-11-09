@@ -33,6 +33,7 @@ import net.smileycorp.followme.common.FollowMe;
 import net.smileycorp.followme.common.ModDefinitions;
 import net.smileycorp.followme.common.network.DenyFollowMessage;
 import net.smileycorp.followme.common.network.FollowMessage;
+import net.smileycorp.followme.common.network.FollowSyncMessage;
 import net.smileycorp.followme.common.network.PacketHandler;
 import net.smileycorp.followme.common.network.StopFollowMessage;
 
@@ -41,7 +42,7 @@ import org.lwjgl.input.Keyboard;
 @EventBusSubscriber(value = Side.CLIENT, modid = ModDefinitions.modid)
 public class ClientHandler {
 
-	public static List<EntityLiving> FOLLOW_ENTITIES = new ArrayList<EntityLiving>();
+	private static List<EntityLiving> FOLLOW_ENTITIES = new ArrayList<EntityLiving>();
 
 	private static KeyBinding FOLLOW_KEY = new KeyBinding("key.followme.follow.desc", Keyboard.KEY_H, "key.followme.category");
 	private static KeyBinding STOP_KEY = new KeyBinding("key.followme.stop.desc", Keyboard.KEY_J, "key.followme.category");
@@ -117,6 +118,15 @@ public class ClientHandler {
 			world.spawnParticle(EnumParticleTypes.VILLAGER_ANGRY, entity.posX+rand.nextFloat(), entity.posY+(entity.height/2f)+rand.nextFloat(), entity.posZ+rand.nextFloat(),0, 0.3f, 0);
 		}
 		world.playSound(entity.posX, entity.posY, entity.posZ, SoundEvents.ENTITY_VILLAGER_NO, entity.getSoundCategory(), 0.3f, rand.nextFloat(), false);
+	}
+
+	public static void syncClient(FollowSyncMessage message) {
+		Minecraft mc = Minecraft.getMinecraft();
+		if (message.isUnfollow()) {
+			FOLLOW_ENTITIES.remove(message.getEntity(mc.world));
+		} else {
+			FOLLOW_ENTITIES.add(message.getEntity(mc.world));
+		}
 	}
 
 }
