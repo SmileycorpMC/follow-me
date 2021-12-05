@@ -15,7 +15,7 @@ import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fmllegacy.network.NetworkDirection;
+import net.minecraftforge.network.NetworkDirection;
 import net.smileycorp.followme.common.ai.FollowUserGoal;
 import net.smileycorp.followme.common.data.DataCondition;
 import net.smileycorp.followme.common.event.FollowUserEvent;

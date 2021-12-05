@@ -8,10 +8,10 @@ import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fmllegacy.network.NetworkEvent.Context;
-import net.minecraftforge.fmllegacy.network.NetworkRegistry;
-import net.minecraftforge.fmllegacy.network.simple.SimpleChannel;
-import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
+import net.minecraftforge.network.NetworkEvent.Context;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import net.smileycorp.atlas.api.network.SimpleByteMessage;
 import net.smileycorp.atlas.api.network.SimpleMessageDecoder;
 import net.smileycorp.atlas.api.network.SimpleMessageEncoder;
@@ -51,7 +51,7 @@ public class PacketHandler {
 			MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
 			Player player = server.getPlayerList().getPlayer(message.getPlayerUUID());
 			Mob entity = message.getEntity(player.level);
-			FollowHandler.processInteraction(player.level, player, entity, InteractionHand.MAIN_HAND);});
+			if (CommonConfigHandler.isInWhitelist(entity)) FollowHandler.processInteraction(player.level, player, entity, InteractionHand.MAIN_HAND);});
 		ctx.setPacketHandled(true);
 	}
 

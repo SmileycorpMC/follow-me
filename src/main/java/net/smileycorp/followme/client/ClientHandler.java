@@ -24,13 +24,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
 import net.minecraftforge.client.event.RenderNameplateEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fmlclient.registry.ClientRegistry;
 import net.smileycorp.atlas.api.util.DirectionUtils;
 import net.smileycorp.followme.common.CommonConfigHandler;
 import net.smileycorp.followme.common.FollowMe;
@@ -43,7 +43,7 @@ import net.smileycorp.followme.common.network.StopFollowMessage;
 
 @EventBusSubscriber(modid = ModDefinitions.MODID, value = Dist.CLIENT)
 public class ClientHandler {
-	
+
 	private static ResourceLocation SPEECH_BUBBLE = ModDefinitions.getResource("textures/gui/follow.png");
 
 	public static Set<Mob> FOLLOW_ENTITIES = new HashSet<Mob>();
@@ -52,8 +52,8 @@ public class ClientHandler {
 	private static KeyMapping STOP_KEY = new KeyMapping("key.followme.stop.desc", KeyEvent.VK_J, "key.followme.category");
 
 	public static void init() {
-		 ClientRegistry.registerKeyBinding(FOLLOW_KEY);
-		 ClientRegistry.registerKeyBinding(STOP_KEY);
+		ClientRegistry.registerKeyBinding(FOLLOW_KEY);
+		ClientRegistry.registerKeyBinding(STOP_KEY);
 	}
 
 	@SubscribeEvent(priority=EventPriority.NORMAL, receiveCanceled=true)
@@ -66,10 +66,8 @@ public class ClientHandler {
 				HitResult ray = DirectionUtils.getEntityRayTrace(level, player, 4.5f);
 				if (ray instanceof EntityHitResult) {
 					Entity target = ((EntityHitResult) ray).getEntity();
-					if (CommonConfigHandler.isInWhitelist(target)) {
-						if (target.isAddedToWorld() && target.isAlive()) {
-							PacketHandler.NETWORK_INSTANCE.sendToServer(new FollowMessage(player, (Mob) target));
-						}
+					if (target.isAddedToWorld() && target.isAlive()) {
+						PacketHandler.NETWORK_INSTANCE.sendToServer(new FollowMessage(player, (Mob) target));
 					}
 				}
 			}
@@ -99,7 +97,7 @@ public class ClientHandler {
 				Player player = mc.player;
 				if (player!=null) {
 					EntityRenderer<Mob> renderer = (EntityRenderer<Mob>) event.getEntityRenderer();
-					PoseStack pose = event.getMatrixStack();
+					PoseStack pose = event.getPoseStack();
 					pose.pushPose();
 					pose.translate(0, -0.2f, 0);
 					TranslatableComponent text = new TranslatableComponent("text.followme.following");
@@ -108,7 +106,7 @@ public class ClientHandler {
 						colour = TextColor.fromLegacyFormat(entity.getTeam().getColor());
 					}
 					text.setStyle(Style.EMPTY.withColor(colour));
-					renderer.renderNameTag(entity, text, pose, event.getRenderTypeBuffer(), event.getPackedLight());
+					renderer.renderNameTag(entity, text, pose, event.getMultiBufferSource(), event.getPackedLight());
 					pose.popPose();
 				}
 			}

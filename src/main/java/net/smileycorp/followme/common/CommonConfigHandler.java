@@ -16,9 +16,9 @@ import net.minecraft.world.entity.Mob;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 import net.minecraftforge.common.ForgeConfigSpec.DoubleValue;
-import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 public class CommonConfigHandler {
 
@@ -36,7 +36,7 @@ public class CommonConfigHandler {
 
 	static {
 		builder.push("general");
-		entityWhitelistBuilder = builder.comment("Entities that follow the player after sneak right-clicked. (uses the string format and either classname e.g. \"VillagerEntity\" or registry name e.g. \"minecraft:villager\")")
+		entityWhitelistBuilder = builder.comment("Entities that follow the player after sneak right-clicked. (uses the string format and either classname e.g. \"Villager\" or registry name e.g. \"minecraft:villager\")")
 				.define("entityWhitelist", Lists.newArrayList());
 		shouldTeleport = builder.comment("Should following entities teleport when too far away (like wolves)?")
 				.define("shouldTeleport", true);
