@@ -18,7 +18,7 @@ public class WorldDataCondition<T extends Comparable<T>> extends NBTDataConditio
 	@Override
 	protected CompoundTag writeNBT(Mob entity, LivingEntity player) {
 		MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-		CompoundTag nbt = server.getWorldData().createTag(server.registryAccess(), new CompoundTag());
+		CompoundTag nbt = server.getWorldData().createTag(server.m_206579_(), new CompoundTag());
 		return nbt;
 	}
 
