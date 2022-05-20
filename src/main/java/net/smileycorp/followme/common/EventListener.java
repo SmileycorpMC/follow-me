@@ -29,8 +29,10 @@ public class EventListener {
 		Level level = event.getEntity().level;
 		Player player = event.getPlayer();
 		Entity target = event.getTarget();
-		if (event.getItemStack().isEmpty() && player.isCrouching() && CommonConfigHandler.isInWhitelist(target) && !level.isClientSide) {
-			FollowHandler.processInteraction(level, player, (Mob) target, event.getHand());
+		if (event.getItemStack().isEmpty() && player.isCrouching() &! level.isClientSide) {
+			boolean isForced = FollowHandler.isForcedToFollow(target);
+			if (isForced || CommonConfigHandler.isInWhitelist(target))
+				FollowHandler.processInteraction(level, player, (Mob) target, event.getHand(), isForced);
 		}
 	}
 

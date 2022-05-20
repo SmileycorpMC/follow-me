@@ -8,6 +8,7 @@ import java.util.Set;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -15,8 +16,10 @@ import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.NetworkDirection;
 import net.smileycorp.followme.common.ai.FollowUserGoal;
+import net.smileycorp.followme.common.capability.IFollower;
 import net.smileycorp.followme.common.data.DataCondition;
 import net.smileycorp.followme.common.event.FollowUserEvent;
 import net.smileycorp.followme.common.network.DenyFollowMessage;
@@ -36,7 +39,12 @@ public class FollowHandler {
 		}
 	}
 
+	//passthrough function for backwards compatibility with other mods
 	public static boolean processInteraction(Level level, LivingEntity user, Mob entity, InteractionHand hand) {
+		return processInteraction(level, user, entity, hand, false);
+	}
+
+	public static boolean processInteraction(Level level, LivingEntity user, Mob entity, InteractionHand hand, boolean ignoreConditions) {
 		//checks if the entity is present in the config file
 		if (entity.getTarget() != user) {
 			//doesn't run for off hand
@@ -46,7 +54,7 @@ public class FollowHandler {
 				MinecraftForge.EVENT_BUS.post(followEvent);
 				if (followEvent.isCanceled()) return false;
 				user = followEvent.user;
-				if (followEvent.conditions != null) {
+				if (followEvent.conditions != null &! ignoreConditions) {
 					for (DataCondition condition : followEvent.conditions.values()) {
 						if (!condition.matches(entity, user))  {
 							if (user instanceof ServerPlayer) PacketHandler.NETWORK_INSTANCE.sendTo(new DenyFollowMessage(entity),
@@ -55,7 +63,7 @@ public class FollowHandler {
 						}
 					}
 				}
-				if (!(entity.getTeam() == null || user.getTeam() == null)) {
+				if (!(entity.getTeam() == null)) {
 					if (!entity.getTeam().isAlliedTo(user.getTeam())) {
 						return false;
 					}
@@ -137,6 +145,14 @@ public class FollowHandler {
 		for (EntityType<?> key : emptySets) {
 			conditions.remove(key);
 		}
+	}
+
+	public static boolean isForcedToFollow(Entity target) {
+		LazyOptional<IFollower> optional = target.getCapability(FollowMe.FOLLOW_CAPABILITY);
+		if (optional.isPresent()) {
+			if (optional.resolve().get().isForcedToFollow()) return true;
+		}
+		return false;
 	}
 
 }

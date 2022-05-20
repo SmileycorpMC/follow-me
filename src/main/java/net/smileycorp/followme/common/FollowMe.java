@@ -6,7 +6,14 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.capabilities.CapabilityToken;
+import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -15,6 +22,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.smileycorp.followme.client.ClientConfigHandler;
 import net.smileycorp.followme.client.ClientHandler;
+import net.smileycorp.followme.common.capability.IFollower;
 import net.smileycorp.followme.common.network.PacketHandler;
 
 @Mod(value = ModDefinitions.MODID)
@@ -24,9 +32,24 @@ public class FollowMe {
 	public static ScheduledExecutorService DELAYED_THREAD_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 	private static Logger logger = LogManager.getLogger(ModDefinitions.NAME);
 
+	public static Capability<IFollower> FOLLOW_CAPABILITY = CapabilityManager.get(new CapabilityToken<IFollower>(){});
+
 	public FollowMe() {
 		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CommonConfigHandler.config);
 		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfigHandler.config);
+	}
+
+	@SubscribeEvent
+	public void registerCapabilities(RegisterCapabilitiesEvent event) {
+		event.register(IFollower.class);
+	}
+
+	@SubscribeEvent
+	public void attachEntityCapabilities(AttachCapabilitiesEvent<Entity> event) {
+		Entity entity = event.getObject();
+		if (entity instanceof Mob) {
+			event.addCapability(ModDefinitions.getResource("follower"), new IFollower.Provider((Mob)entity));
+		}
 	}
 
 	@SubscribeEvent

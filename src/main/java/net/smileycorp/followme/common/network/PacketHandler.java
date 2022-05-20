@@ -51,7 +51,9 @@ public class PacketHandler {
 			MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
 			Player player = server.getPlayerList().getPlayer(message.getPlayerUUID());
 			Mob entity = message.getEntity(player.level);
-			if (CommonConfigHandler.isInWhitelist(entity)) FollowHandler.processInteraction(player.level, player, entity, InteractionHand.MAIN_HAND);});
+			boolean isForced = FollowHandler.isForcedToFollow(entity);
+			if (isForced || CommonConfigHandler.isInWhitelist(entity))
+				FollowHandler.processInteraction(player.level, player, entity, InteractionHand.MAIN_HAND, isForced);});
 		ctx.setPacketHandled(true);
 	}
 
