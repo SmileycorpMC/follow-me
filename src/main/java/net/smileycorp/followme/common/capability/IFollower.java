@@ -1,7 +1,7 @@
 package net.smileycorp.followme.common.capability;
 
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.ByteTag;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
@@ -19,9 +19,9 @@ public interface IFollower {
 
 	public LivingEntity getFollowedEntity();
 
-	public void readNBT(ByteTag nbt);
+	public void readNBT(CompoundTag nbt);
 
-	public ByteTag writeNBT();
+	public CompoundTag writeNBT();
 
 	public static class Implementation implements IFollower {
 
@@ -54,19 +54,21 @@ public interface IFollower {
 		}
 
 		@Override
-		public void readNBT(ByteTag tag) {
-			forceFollow = tag.getAsByte() > (byte)0;
+		public void readNBT(CompoundTag tag) {
+			forceFollow = tag.getByte("shouldFollow") > (byte)0;
 		}
 
 		@Override
-		public ByteTag writeNBT() {
-			return ByteTag.valueOf(forceFollow);
+		public CompoundTag writeNBT() {
+			CompoundTag tag = new CompoundTag();
+			tag.putByte("shouldFollow", (byte)(forceFollow ? 1 : 0));
+			return tag;
 		}
 
 	}
 
 
-	public static class Provider implements ICapabilitySerializable<ByteTag> {
+	public static class Provider implements ICapabilitySerializable<CompoundTag> {
 
 		private final IFollower impl;
 
@@ -80,12 +82,12 @@ public interface IFollower {
 		}
 
 		@Override
-		public ByteTag serializeNBT() {
+		public CompoundTag serializeNBT() {
 			return impl.writeNBT();
 		}
 
 		@Override
-		public void deserializeNBT(ByteTag nbt) {
+		public void deserializeNBT(CompoundTag nbt) {
 			impl.readNBT(nbt);
 		}
 

@@ -1,10 +1,11 @@
 {
  "homepage":"https://www.curseforge.com/minecraft/mc-mods/follow-me",
  "1.18": {
-   "1.1.7":"Port to 1.18"
+   "1.1.7":"Port to 1.18",
+   "1.1.7":"Add capability to bypass config and conditions requirements for pack creators"
   },
  "promos": {
-   "1.18-latest":"1.1.7",
-   "1.18-recommended":"1.1.7"
+   "1.18-latest":"1.1.8",
+   "1.18-recommended":"1.1.8"
   }
 }

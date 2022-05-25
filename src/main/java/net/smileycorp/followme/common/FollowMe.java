@@ -35,6 +35,7 @@ public class FollowMe {
 	public static Capability<IFollower> FOLLOW_CAPABILITY = CapabilityManager.get(new CapabilityToken<IFollower>(){});
 
 	public FollowMe() {
+		MinecraftForge.EVENT_BUS.register(this);
 		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CommonConfigHandler.config);
 		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfigHandler.config);
 	}
