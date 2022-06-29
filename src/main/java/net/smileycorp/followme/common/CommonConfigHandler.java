@@ -37,7 +37,7 @@ public class CommonConfigHandler {
 	static {
 		builder.push("general");
 		entityWhitelistBuilder = builder.comment("Entities that follow the player after sneak right-clicked. (uses the string format and either classname e.g. \"Villager\" or registry name e.g. \"minecraft:villager\")")
-				.define("entityWhitelist", Lists.newArrayList());
+				.define("entityWhitelist", Lists.newArrayList("minecraft:villager"));
 		shouldTeleport = builder.comment("Should following entities teleport when too far away (like wolves)?")
 				.define("shouldTeleport", true);
 		teleportDistance = builder.comment("How far away do entities need to be away to teleport?")

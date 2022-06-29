@@ -3,7 +3,6 @@ package net.smileycorp.followme.client;
 
 import java.awt.event.KeyEvent;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -12,11 +11,13 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
@@ -100,7 +101,7 @@ public class ClientHandler {
 					PoseStack pose = event.getPoseStack();
 					pose.pushPose();
 					pose.translate(0, -0.2f, 0);
-					TranslatableComponent text = new TranslatableComponent("text.followme.following");
+					MutableComponent text = MutableComponent.create(new TranslatableContents("text.followme.following"));
 					TextColor colour = ClientConfigHandler.getFollowMessageColour();
 					if (ClientConfigHandler.followMessageUseTeamColour.get() && entity.getTeam()!=null) {
 						colour = TextColor.fromLegacyFormat(entity.getTeam().getColor());
@@ -127,7 +128,7 @@ public class ClientHandler {
 		Minecraft mc = Minecraft.getInstance();
 		Level level = mc.level;
 		Mob entity = message.getEntity(level);
-		Random rand = level.random;
+		RandomSource rand = level.random;
 		for (int i = 0; i<6; i++) {
 			level.addParticle(ParticleTypes.ANGRY_VILLAGER, entity.getX()+rand.nextFloat(), entity.getY()+(entity.getBbHeight()/2f)+rand.nextFloat(), entity.getZ()+rand.nextFloat(),0, 0.3f, 0);
 		}

@@ -1,10 +1,10 @@
 package net.smileycorp.followme.common.ai;
 
 import java.util.EnumSet;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -80,7 +80,7 @@ public class FollowUserGoal extends Goal {
 					int x = (int) (Math.round(user.getX() + 2*dir.x));
 					int y = (int) (Math.round(user.getY()));
 					int z = (int) (Math.round(user.getZ() + 2*dir.z));
-					Random rand = level.random;
+					RandomSource rand = level.random;
 					for (int l = 0; l <= 10; ++l) {
 						int i = rand.nextInt(7)-3;
 						int j = rand.nextInt(3)-1;
