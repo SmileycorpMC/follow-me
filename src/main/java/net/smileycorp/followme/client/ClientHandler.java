@@ -66,7 +66,7 @@ public class ClientHandler {
 				HitResult ray = DirectionUtils.getEntityRayTrace(level, player, 4.5f);
 				if (ray instanceof EntityHitResult) {
 					Entity target = ((EntityHitResult) ray).getEntity();
-					if (target.isAddedToWorld() && target.isAlive()) {
+					if (target.isAddedToWorld() && target.isAlive() && target instanceof Mob) {
 						PacketHandler.NETWORK_INSTANCE.sendToServer(new FollowMessage(player, (Mob) target));
 					}
 				}
