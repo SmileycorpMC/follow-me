@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.settings.KeyBinding;
@@ -39,21 +41,19 @@ import net.smileycorp.followme.common.network.FollowSyncMessage;
 import net.smileycorp.followme.common.network.PacketHandler;
 import net.smileycorp.followme.common.network.StopFollowMessage;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-
 @EventBusSubscriber(modid = ModDefinitions.MODID, value = Dist.CLIENT)
 public class ClientHandler {
 
 	private static ResourceLocation SPEECH_BUBBLE = ModDefinitions.getResource("textures/gui/follow.png");
 
-	public static Set<MobEntity> FOLLOW_ENTITIES = new HashSet<MobEntity>();
+	public static Set<MobEntity> FOLLOW_ENTITIES = new HashSet<>();
 
 	private static KeyBinding FOLLOW_KEY = new KeyBinding("key.followme.follow.desc", KeyEvent.VK_H, "key.followme.category");
 	private static KeyBinding STOP_KEY = new KeyBinding("key.followme.stop.desc", KeyEvent.VK_J, "key.followme.category");
 
 	public static void init() {
-		 ClientRegistry.registerKeyBinding(FOLLOW_KEY);
-		 ClientRegistry.registerKeyBinding(STOP_KEY);
+		ClientRegistry.registerKeyBinding(FOLLOW_KEY);
+		ClientRegistry.registerKeyBinding(STOP_KEY);
 	}
 
 	@SubscribeEvent(priority=EventPriority.NORMAL, receiveCanceled=true)
@@ -67,7 +67,7 @@ public class ClientHandler {
 				if (ray instanceof EntityRayTraceResult) {
 					Entity target = ((EntityRayTraceResult) ray).getEntity();
 					if (CommonConfigHandler.isInWhitelist(target)) {
-						if (target.isAddedToWorld() && target.isAlive()) {
+						if (target.isAddedToWorld() && target.isAlive() && target instanceof MobEntity) {
 							PacketHandler.NETWORK_INSTANCE.sendToServer(new FollowMessage(player, (MobEntity) target));
 						}
 					}
