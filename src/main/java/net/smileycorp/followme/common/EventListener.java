@@ -17,7 +17,7 @@ public class EventListener {
 	//activate when a player joins a server
 	@SubscribeEvent
 	public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
-		Player player = event.getPlayer();
+		Player player = event.getEntity();
 		if (!player.level.isClientSide) {
 			//PacketHandler.NETWORK_INSTANCE.sendTo(new SimpleByteMessage(CommonConfigHandler.getPacketData()), ((ServerPlayerEntity)player).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
 		}
@@ -27,7 +27,7 @@ public class EventListener {
 	@SubscribeEvent
 	public static void onInteractEntity(PlayerInteractEvent.EntityInteract event) {
 		Level level = event.getEntity().level;
-		Player player = event.getPlayer();
+		Player player = event.getEntity();
 		Entity target = event.getTarget();
 		if (event.getItemStack().isEmpty() && player.isCrouching() &! level.isClientSide) {
 			boolean isForced = FollowHandler.isForcedToFollow(target);

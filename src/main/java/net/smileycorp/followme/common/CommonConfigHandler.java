@@ -32,7 +32,7 @@ public class CommonConfigHandler {
 	public static DoubleValue teleportDistance;
 	public static DoubleValue stopFollowDistance;
 
-	private static IForgeRegistry<EntityType<?>> entityRegistry = ForgeRegistries.ENTITIES;
+	private static IForgeRegistry<EntityType<?>> entityRegistry = ForgeRegistries.ENTITY_TYPES;
 
 	static {
 		builder.push("general");

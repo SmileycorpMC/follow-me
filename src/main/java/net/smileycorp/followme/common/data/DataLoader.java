@@ -32,7 +32,7 @@ public class DataLoader extends SimpleJsonResourceReloadListener {
 
 	private static Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 	private static ResourceLocation CONDITIONS = ModDefinitions.getResource("conditions");
-	private static IForgeRegistry<EntityType<?>> entityRegistry = ForgeRegistries.ENTITIES;
+	private static IForgeRegistry<EntityType<?>> entityRegistry = ForgeRegistries.ENTITY_TYPES;
 
 	public DataLoader() {
 		super(GSON, "conditions");
@@ -152,7 +152,7 @@ public class DataLoader extends SimpleJsonResourceReloadListener {
 						}
 					}
 					if (!subConditions.isEmpty()) {
-							return new LogicalDataCondition(gate, subConditions);
+						return new LogicalDataCondition(gate, subConditions);
 					} else {
 						throw new Exception("Operator has no valid conditions");
 					}

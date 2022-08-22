@@ -3,7 +3,8 @@
  "1.19": {
    "1.1.7":"Port to 1.19",
    "1.1.8":"Add capability to bypass config and conditions requirements for pack creators",
-   "1.1.8a":"Fixed crash when using keybinds to initiate following"
+   "1.1.8a":"Fixed crash when using keybinds to initiate following",
+   "1.1.8a":"Change to match forge 1.19.1 refactor"
   },
  "promos": {
    "1.19-latest":"1.1.8a",

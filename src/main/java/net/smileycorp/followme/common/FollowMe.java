@@ -55,7 +55,6 @@ public class FollowMe {
 
 	@SubscribeEvent
 	public static void clientSetup(FMLClientSetupEvent event){
-		ClientHandler.init();
 		MinecraftForge.EVENT_BUS.register(new ClientHandler());
 	}
 

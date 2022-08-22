@@ -25,11 +25,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.ClientRegistry;
-import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
-import net.minecraftforge.client.event.RenderNameplateEvent;
-import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.RenderNameTagEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.smileycorp.atlas.api.util.DirectionUtils;
@@ -52,13 +51,14 @@ public class ClientHandler {
 	private static KeyMapping FOLLOW_KEY = new KeyMapping("key.followme.follow.desc", KeyEvent.VK_H, "key.followme.category");
 	private static KeyMapping STOP_KEY = new KeyMapping("key.followme.stop.desc", KeyEvent.VK_J, "key.followme.category");
 
-	public static void init() {
-		ClientRegistry.registerKeyBinding(FOLLOW_KEY);
-		ClientRegistry.registerKeyBinding(STOP_KEY);
+	@SubscribeEvent(receiveCanceled=true)
+	public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
+		event.register(FOLLOW_KEY);
+		event.register(STOP_KEY);
 	}
 
-	@SubscribeEvent(priority=EventPriority.NORMAL, receiveCanceled=true)
-	public static void onEvent(KeyInputEvent event) {
+	@SubscribeEvent(receiveCanceled=true)
+	public static void onEvent(InputEvent.Key event) {
 		Minecraft mc = Minecraft.getInstance();
 		Player player = mc.player;
 		if (player!=null) {
@@ -79,8 +79,8 @@ public class ClientHandler {
 	}
 
 	@SubscribeEvent
-	public void onlevelUnload(WorldEvent.Unload event) {
-		if (event.getWorld().isClientSide()) {
+	public void onlevelUnload(LevelEvent.Unload event) {
+		if (event.getLevel().isClientSide()) {
 			FOLLOW_ENTITIES.clear();
 			CommonConfigHandler.resetConfigSync();
 			FollowMe.logInfo("Cleared config from server.");
@@ -90,7 +90,7 @@ public class ClientHandler {
 
 	@SubscribeEvent
 	@SuppressWarnings("unchecked")
-	public void renderLiving(RenderNameplateEvent event) {
+	public void renderLiving(RenderNameTagEvent event) {
 		if (event.getEntity() instanceof Mob) {
 			Mob entity = (Mob) event.getEntity();
 			if (FOLLOW_ENTITIES.contains(entity)) {
