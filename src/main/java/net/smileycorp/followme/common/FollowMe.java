@@ -1,11 +1,5 @@
 package net.smileycorp.followme.common;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraftforge.common.MinecraftForge;
@@ -24,13 +18,18 @@ import net.smileycorp.followme.client.ClientConfigHandler;
 import net.smileycorp.followme.client.ClientHandler;
 import net.smileycorp.followme.common.capability.IFollower;
 import net.smileycorp.followme.common.network.PacketHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-@Mod(value = ModDefinitions.MODID)
-@Mod.EventBusSubscriber(modid = ModDefinitions.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
+@Mod(value = Constants.MODID)
+@Mod.EventBusSubscriber(modid = Constants.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FollowMe {
 
 	public static ScheduledExecutorService DELAYED_THREAD_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-	private static Logger logger = LogManager.getLogger(ModDefinitions.NAME);
+	private static Logger logger = LogManager.getLogger(Constants.NAME);
 
 	public static Capability<IFollower> FOLLOW_CAPABILITY = CapabilityManager.get(new CapabilityToken<IFollower>(){});
 
@@ -49,7 +48,7 @@ public class FollowMe {
 	public void attachEntityCapabilities(AttachCapabilitiesEvent<Entity> event) {
 		Entity entity = event.getObject();
 		if (entity instanceof Mob) {
-			event.addCapability(ModDefinitions.getResource("follower"), new IFollower.Provider((Mob)entity));
+			event.addCapability(Constants.loc("follower"), new IFollower.Provider((Mob)entity));
 		}
 	}
 

@@ -1,11 +1,5 @@
 package net.smileycorp.followme.common;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -25,6 +19,12 @@ import net.smileycorp.followme.common.event.FollowUserEvent;
 import net.smileycorp.followme.common.network.DenyFollowMessage;
 import net.smileycorp.followme.common.network.FollowSyncMessage;
 import net.smileycorp.followme.common.network.PacketHandler;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 public class FollowHandler {
 

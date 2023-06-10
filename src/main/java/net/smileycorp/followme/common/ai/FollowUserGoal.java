@@ -1,8 +1,5 @@
 package net.smileycorp.followme.common.ai;
 
-import java.util.EnumSet;
-import java.util.concurrent.TimeUnit;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -19,6 +16,9 @@ import net.smileycorp.followme.common.CommonConfigHandler;
 import net.smileycorp.followme.common.FollowHandler;
 import net.smileycorp.followme.common.FollowMe;
 
+import java.util.EnumSet;
+import java.util.concurrent.TimeUnit;
+
 public class FollowUserGoal extends Goal {
 
 	protected final float min = 1f;
@@ -33,7 +33,7 @@ public class FollowUserGoal extends Goal {
 	public FollowUserGoal(Mob entity, LivingEntity user) {
 		this.entity=entity;
 		this.user=user;
-		level=entity.level;
+		level=entity.level();
 		pather=entity.getNavigation();
 		setFlags(EnumSet.of(Goal.Flag.MOVE));
 	}
@@ -69,7 +69,7 @@ public class FollowUserGoal extends Goal {
 			timeToRecalcPath = 5;
 			if (entity.distanceTo(user) > min) {
 				Vec3 dir = DirectionUtils.getDirectionVecXZ(user, entity);
-				Path path = pather.createPath(user.blockPosition().offset(Math.round(dir.x), 0, Math.round(dir.z)), 1);
+				Path path = pather.createPath(user.blockPosition().offset((int) Math.round(dir.x), 0, (int) Math.round(dir.z)), 1);
 				pather.moveTo(path, 0.75);
 			}
 		}
@@ -85,7 +85,7 @@ public class FollowUserGoal extends Goal {
 						int i = rand.nextInt(7)-3;
 						int j = rand.nextInt(3)-1;
 						int k = rand.nextInt(7)-3;
-						BlockPos pos = new BlockPos(x+i + 0.5, y+j + 0.5, z+k + 0.5);
+						BlockPos pos = new BlockPos((int)(x+i + 0.5), (int) (y+j + 0.5), (int) (z+k + 0.5));
 						if (canTeleportTo(pos)) {
 							entity.moveTo(pos.getX(), pos.getY(), pos.getZ());
 							pather.stop();

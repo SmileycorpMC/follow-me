@@ -4,9 +4,13 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.PacketListener;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
-import net.smileycorp.atlas.api.network.SimpleAbstractMessage;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.network.NetworkEvent;
+import net.smileycorp.atlas.api.network.AbstractMessage;
+import net.smileycorp.followme.client.ClientHandler;
 
-public class DenyFollowMessage extends SimpleAbstractMessage {
+public class DenyFollowMessage extends AbstractMessage {
 
 	public DenyFollowMessage() {}
 
@@ -37,6 +41,12 @@ public class DenyFollowMessage extends SimpleAbstractMessage {
 	@Override
 	public String toString() {
 		return super.toString() + "[entity = " + entity + "]";
+	}
+
+	@Override
+	public void process(NetworkEvent.Context ctx) {
+		ctx.enqueueWork(() ->  DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> () -> ClientHandler.processEntityDeny(this)));
+		ctx.setPacketHandled(true);
 	}
 
 }

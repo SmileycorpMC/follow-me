@@ -1,16 +1,22 @@
 package net.smileycorp.followme.common.network;
 
-import java.util.UUID;
-
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.PacketListener;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.smileycorp.atlas.api.network.SimpleAbstractMessage;
+import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.server.ServerLifecycleHooks;
+import net.smileycorp.atlas.api.network.AbstractMessage;
 import net.smileycorp.atlas.api.util.DataUtils;
+import net.smileycorp.followme.common.CommonConfigHandler;
+import net.smileycorp.followme.common.FollowHandler;
 
-public class FollowMessage extends SimpleAbstractMessage {
+import java.util.UUID;
+
+public class FollowMessage extends AbstractMessage {
 
 	public FollowMessage() {}
 
@@ -50,6 +56,18 @@ public class FollowMessage extends SimpleAbstractMessage {
 	@Override
 	public String toString() {
 		return super.toString() + "[ player = " + player + ", entity = " + entity + "]";
+	}
+
+	@Override
+	public void process(NetworkEvent.Context ctx) {
+		ctx.enqueueWork(() -> {
+			MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+			Player player = server.getPlayerList().getPlayer(getPlayerUUID());
+			Mob entity = getEntity(player.level());
+			boolean isForced = FollowHandler.isForcedToFollow(entity);
+			if (isForced || CommonConfigHandler.isInWhitelist(entity))
+				FollowHandler.processInteraction(player.level(), player, entity, InteractionHand.MAIN_HAND, isForced);});
+		ctx.setPacketHandled(true);
 	}
 
 }

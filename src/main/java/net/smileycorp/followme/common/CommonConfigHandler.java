@@ -1,14 +1,6 @@
 package net.smileycorp.followme.common;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang3.ArrayUtils;
-
 import com.google.common.collect.Lists;
-
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -17,8 +9,13 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 import net.minecraftforge.common.ForgeConfigSpec.DoubleValue;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.server.ServerLifecycleHooks;
+import org.apache.commons.lang3.ArrayUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CommonConfigHandler {
 
@@ -32,12 +29,10 @@ public class CommonConfigHandler {
 	public static DoubleValue teleportDistance;
 	public static DoubleValue stopFollowDistance;
 
-	private static IForgeRegistry<EntityType<?>> entityRegistry = ForgeRegistries.ENTITY_TYPES;
-
 	static {
 		builder.push("general");
 		entityWhitelistBuilder = builder.comment("Entities that follow the player after sneak right-clicked. (uses the string format and either classname e.g. \"Villager\" or registry name e.g. \"minecraft:villager\")")
-				.define("entityWhitelist", Lists.newArrayList("minecraft:villager"));
+				.define("entityWhitelist", Lists.newArrayList("minecraft:villager", "minecraft:iron_golem"));
 		shouldTeleport = builder.comment("Should following entities teleport when too far away (like wolves)?")
 				.define("shouldTeleport", true);
 		teleportDistance = builder.comment("How far away do entities need to be away to teleport?")
@@ -67,14 +62,14 @@ public class CommonConfigHandler {
 					if (name.contains(":")) {
 						String[] nameSplit = name.split(":");
 						ResourceLocation loc = new ResourceLocation(nameSplit[0], nameSplit[1]);
-						if (entityRegistry.containsKey(loc)) {
-							type = entityRegistry.getValue(loc);
+						if (ForgeRegistries.ENTITY_TYPES.containsKey(loc)) {
+							type = ForgeRegistries.ENTITY_TYPES.getValue(loc);
 						} else {
 							throw new Exception("Entity " + name + " is not registered");
 						}
 					} else { //assume its a class name
 						if (registeredEntities.isEmpty()) {
-							for (EntityType<?> entry : entityRegistry) {
+							for (EntityType<?> entry : ForgeRegistries.ENTITY_TYPES) {
 								//if we haven't already got all entity names stored get them to check against
 								Class<? extends Mob> eclazz = getClass(entry);
 								registeredEntities.put(eclazz.getSimpleName(), entry);
@@ -104,7 +99,7 @@ public class CommonConfigHandler {
 
 	public static boolean isInWhitelist(Entity entity) {
 		if (entity instanceof Mob) {
-			if (entity.level.isClientSide) {
+			if (entity.level().isClientSide) {
 				if (entityWhitelist.contains(entity.getType())) return true;
 			} else {
 				if (getLocalWhitelist().contains(entity.getType())) return true;
@@ -117,7 +112,7 @@ public class CommonConfigHandler {
 		byte[] bytes = {};
 		//String data = "";
 		for (EntityType<?> type : getLocalWhitelist()) {
-			bytes = ArrayUtils.addAll(bytes, entityRegistry.getKey(type).toString().getBytes());
+			bytes = ArrayUtils.addAll(bytes, ForgeRegistries.ENTITY_TYPES.getKey(type).toString().getBytes());
 			bytes = ArrayUtils.addAll(bytes, ";".getBytes());
 		}
 		return bytes;
@@ -136,7 +131,7 @@ public class CommonConfigHandler {
 		}
 		for (String name : new String(bytes).split(";")) {
 			try {
-				EntityType<?> type = entityRegistry.getValue(new ResourceLocation(name));
+				EntityType<?> type = ForgeRegistries.ENTITY_TYPES.getValue(new ResourceLocation(name));
 				whitelist.add(type);
 				FollowMe.logInfo("Synced config entity " + name + " from server");
 			} catch(Exception e) {

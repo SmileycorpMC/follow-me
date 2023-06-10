@@ -1,10 +1,10 @@
 package net.smileycorp.followme.common.data;
 
-import java.util.List;
-
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.smileycorp.atlas.api.data.LogicalOperation;
+
+import java.util.List;
 
 public class LogicalDataCondition implements DataCondition {
 

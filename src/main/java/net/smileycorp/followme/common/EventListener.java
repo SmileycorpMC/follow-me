@@ -11,14 +11,14 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.smileycorp.followme.common.data.DataLoader;
 
-@EventBusSubscriber(modid = ModDefinitions.MODID)
+@EventBusSubscriber(modid = Constants.MODID)
 public class EventListener {
 
 	//activate when a player joins a server
 	@SubscribeEvent
 	public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
 		Player player = event.getEntity();
-		if (!player.level.isClientSide) {
+		if (!player.level().isClientSide) {
 			//PacketHandler.NETWORK_INSTANCE.sendTo(new SimpleByteMessage(CommonConfigHandler.getPacketData()), ((ServerPlayerEntity)player).connection.connection, NetworkDirection.PLAY_TO_CLIENT);
 		}
 	}
@@ -26,7 +26,7 @@ public class EventListener {
 	//activate when a player right clicks an entity
 	@SubscribeEvent
 	public static void onInteractEntity(PlayerInteractEvent.EntityInteract event) {
-		Level level = event.getEntity().level;
+		Level level = event.getEntity().level();
 		Player player = event.getEntity();
 		Entity target = event.getTarget();
 		if (event.getItemStack().isEmpty() && player.isCrouching() &! level.isClientSide) {

@@ -1,13 +1,10 @@
 {
  "homepage":"https://www.curseforge.com/minecraft/mc-mods/follow-me",
- "1.19": {
-   "1.1.7":"Port to 1.19",
-   "1.1.8":"Add capability to bypass config and conditions requirements for pack creators",
-   "1.1.8a":"Fixed crash when using keybinds to initiate following",
-   "1.1.8b":"Change to match forge 1.19.1 refactor"
+ "1.20": {
+   "1.1.8":"Port to 1.20"
   },
  "promos": {
-   "1.19-latest":"1.1.8b",
-   "1.19-recommended":"1.1.8b"
+   "1.20-latest":"1.1.8",
+   "1.20-recommended":"1.1.8"
   }
 }

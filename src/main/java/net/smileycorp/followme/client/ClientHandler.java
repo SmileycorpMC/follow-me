@@ -1,12 +1,7 @@
 package net.smileycorp.followme.client;
 
 
-import java.awt.event.KeyEvent;
-import java.util.HashSet;
-import java.util.Set;
-
 import com.mojang.blaze3d.vertex.PoseStack;
-
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -14,7 +9,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.RandomSource;
@@ -32,19 +26,20 @@ import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.smileycorp.atlas.api.util.DirectionUtils;
+import net.smileycorp.atlas.api.util.TextUtils;
 import net.smileycorp.followme.common.CommonConfigHandler;
+import net.smileycorp.followme.common.Constants;
 import net.smileycorp.followme.common.FollowMe;
-import net.smileycorp.followme.common.ModDefinitions;
-import net.smileycorp.followme.common.network.DenyFollowMessage;
-import net.smileycorp.followme.common.network.FollowMessage;
-import net.smileycorp.followme.common.network.FollowSyncMessage;
-import net.smileycorp.followme.common.network.PacketHandler;
-import net.smileycorp.followme.common.network.StopFollowMessage;
+import net.smileycorp.followme.common.network.*;
 
-@EventBusSubscriber(modid = ModDefinitions.MODID, value = Dist.CLIENT)
+import java.awt.event.KeyEvent;
+import java.util.HashSet;
+import java.util.Set;
+
+@EventBusSubscriber(modid = Constants.MODID, value = Dist.CLIENT)
 public class ClientHandler {
 
-	private static ResourceLocation SPEECH_BUBBLE = ModDefinitions.getResource("textures/gui/follow.png");
+	private static ResourceLocation SPEECH_BUBBLE = Constants.loc("textures/gui/follow.png");
 
 	public static Set<Mob> FOLLOW_ENTITIES = new HashSet<Mob>();
 
@@ -62,7 +57,7 @@ public class ClientHandler {
 		Minecraft mc = Minecraft.getInstance();
 		Player player = mc.player;
 		if (player!=null) {
-			Level level = player.level;
+			Level level = player.level();
 			if (FOLLOW_KEY.isDown()) {
 				HitResult ray = DirectionUtils.getEntityRayTrace(level, player, 4.5f);
 				if (ray instanceof EntityHitResult) {
@@ -101,7 +96,7 @@ public class ClientHandler {
 					PoseStack pose = event.getPoseStack();
 					pose.pushPose();
 					pose.translate(0, -0.2f, 0);
-					MutableComponent text = MutableComponent.create(new TranslatableContents("text.followme.following"));
+					MutableComponent text = TextUtils.translatableComponent("text.followme.following", "Following");
 					TextColor colour = ClientConfigHandler.getFollowMessageColour();
 					if (ClientConfigHandler.followMessageUseTeamColour.get() && entity.getTeam()!=null) {
 						colour = TextColor.fromLegacyFormat(entity.getTeam().getColor());

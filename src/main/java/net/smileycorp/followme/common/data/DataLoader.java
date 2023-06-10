@@ -1,17 +1,6 @@
 package net.smileycorp.followme.common.data;
 
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
+import com.google.gson.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
@@ -24,14 +13,20 @@ import net.smileycorp.atlas.api.data.ComparableOperation;
 import net.smileycorp.atlas.api.data.DataType;
 import net.smileycorp.atlas.api.data.LogicalOperation;
 import net.smileycorp.atlas.api.data.NBTExplorer;
+import net.smileycorp.followme.common.Constants;
 import net.smileycorp.followme.common.FollowHandler;
 import net.smileycorp.followme.common.FollowMe;
-import net.smileycorp.followme.common.ModDefinitions;
+
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class DataLoader extends SimpleJsonResourceReloadListener {
 
 	private static Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-	private static ResourceLocation CONDITIONS = ModDefinitions.getResource("conditions");
+	private static ResourceLocation CONDITIONS = Constants.loc("conditions");
 	private static IForgeRegistry<EntityType<?>> entityRegistry = ForgeRegistries.ENTITY_TYPES;
 
 	public DataLoader() {
