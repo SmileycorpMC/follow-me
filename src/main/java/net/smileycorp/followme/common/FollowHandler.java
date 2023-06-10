@@ -39,11 +39,6 @@ public class FollowHandler {
 		}
 	}
 
-	//passthrough function for backwards compatibility with other mods
-	public static boolean processInteraction(Level level, LivingEntity user, Mob entity, InteractionHand hand) {
-		return processInteraction(level, user, entity, hand, false);
-	}
-
 	public static boolean processInteraction(Level level, LivingEntity user, Mob entity, InteractionHand hand, boolean ignoreConditions) {
 		//checks if the entity is present in the config file
 		if (entity.getTarget() != user) {
