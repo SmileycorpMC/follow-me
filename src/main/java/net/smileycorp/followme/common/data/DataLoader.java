@@ -127,9 +127,6 @@ public class DataLoader extends SimpleJsonResourceReloadListener {
 					return new WorldDataCondition(explorer, value, operation);
 				} else if (mode.equals("compare_nbt")) {
 					return new CompareDataCondition(explorer, new NBTExplorer((String) value, type), operation);
-				} else if (mode.equals("player_nbt")) {
-					FollowMe.logError("\"player_nbt\" is depreciated, use \"user_nbt\" in future", new Exception("\"player_nbt\""));
-					return new UserDataCondition(explorer, value, operation);
 				} else {
 					throw new Exception("\"" + mode + "\" for condition \"" + name + "\"  is not a valid condition mode");
 				}
