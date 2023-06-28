@@ -11,7 +11,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '1.19.2-1.1.8b'
+version = '1.19.3-1.1.8c'
 group = 'net.smileycorp.followme'
 archivesBaseName = 'Follow-Me'
 
@@ -76,7 +76,7 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.19.2-43.1.2'
+    minecraft 'net.minecraftforge:forge:1.19.3-44.1.16'
 	compileOnly fileTree(dir: 'libs', include: ['*.jar'])
 }
 
