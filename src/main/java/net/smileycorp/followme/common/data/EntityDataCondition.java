@@ -1,5 +1,6 @@
 package net.smileycorp.followme.common.data;
 
+import net.minecraft.advancements.critereon.NbtPredicate;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -15,7 +16,7 @@ public class EntityDataCondition<T extends Comparable<T>> extends NBTDataConditi
 
 	@Override
 	protected CompoundTag writeNBT(Mob entity, LivingEntity user) {
-		return entity.saveWithoutId(new CompoundTag());
+		return NbtPredicate.getEntityTagToCompare(entity);
 	}
 
 }
