@@ -16,8 +16,8 @@ public class CompareDataCondition<T extends Comparable<T>> implements DataCondit
 	protected final ComparableOperation operation;
 
 	public CompareDataCondition(NBTExplorer<T> entityExplorer, NBTExplorer<T> playerExplorer, ComparableOperation operation) {
-		this.entityExplorer=entityExplorer;
-		this.playerExplorer=playerExplorer;
+		this.entityExplorer = entityExplorer;
+		this.playerExplorer = playerExplorer;
 		this.operation = operation;
 	}
 
@@ -28,10 +28,9 @@ public class CompareDataCondition<T extends Comparable<T>> implements DataCondit
 		CompoundTag playerNbt = new CompoundTag();
 		user.saveWithoutId(playerNbt);
 		try {
-			boolean result = operation.apply(entityExplorer.findValue(entityNbt), playerExplorer.findValue(playerNbt));
-			return result;
+			return operation.apply(entityExplorer.findValue(entityNbt), playerExplorer.findValue(playerNbt));
 		} catch (Exception e) {
-			FollowMe.logError("Condition is invalid for " + this.toString(), e);
+			FollowMe.logError("Condition is invalid for " + this, e);
 		}
 		return false;
 	}

@@ -8,6 +8,6 @@ public class Constants {
 	public static final String NAME = "Follow Me";
 
 	public static ResourceLocation loc(String name) {
-		return new ResourceLocation(MODID, name);
+		return ResourceLocation.tryBuild(MODID, name);
 	}
 }

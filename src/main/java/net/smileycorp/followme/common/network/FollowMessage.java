@@ -1,22 +1,25 @@
 package net.smileycorp.followme.common.network;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.PacketListener;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.server.ServerLifecycleHooks;
-import net.smileycorp.atlas.api.network.AbstractMessage;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import net.smileycorp.atlas.api.network.NetworkMessage;
 import net.smileycorp.atlas.api.util.DataUtils;
 import net.smileycorp.followme.common.CommonConfigHandler;
+import net.smileycorp.followme.common.Constants;
 import net.smileycorp.followme.common.FollowHandler;
 
 import java.util.UUID;
 
-public class FollowMessage extends AbstractMessage {
+public class FollowMessage implements NetworkMessage {
+	
+	public static Type<FollowMessage> TYPE = new Type(Constants.loc("follow"));
 
 	public FollowMessage() {}
 
@@ -38,7 +41,7 @@ public class FollowMessage extends AbstractMessage {
 
 	@Override
 	public void write(FriendlyByteBuf buf){
-		if (player!=null)buf.writeUtf(player.toString());
+		if (player != null) buf.writeUtf(player.toString());
 		buf.writeInt(entity);
 	}
 
@@ -51,23 +54,24 @@ public class FollowMessage extends AbstractMessage {
 	}
 
 	@Override
-	public void handle(PacketListener listener) {}
-
-	@Override
 	public String toString() {
 		return super.toString() + "[ player = " + player + ", entity = " + entity + "]";
 	}
-
+	
 	@Override
-	public void process(NetworkEvent.Context ctx) {
-		ctx.enqueueWork(() -> {
+	public void process(IPayloadContext ctx) {
+		if (ctx.connection().getDirection().isServerbound()) ctx.enqueueWork(() -> {
 			MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
 			Player player = server.getPlayerList().getPlayer(getPlayerUUID());
 			Mob entity = getEntity(player.level());
 			boolean isForced = FollowHandler.isForcedToFollow(entity);
 			if (isForced || CommonConfigHandler.isInWhitelist(entity))
 				FollowHandler.processInteraction(player.level(), player, entity, InteractionHand.MAIN_HAND, isForced);});
-		ctx.setPacketHandled(true);
+	}
+	
+	@Override
+	public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+		return TYPE;
 	}
 
 }

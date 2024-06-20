@@ -7,11 +7,11 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.phys.Vec3;
-import net.smileycorp.atlas.api.util.DirectionUtils;
+import net.smileycorp.atlas.api.util.VecMath;
 import net.smileycorp.followme.common.CommonConfigHandler;
 import net.smileycorp.followme.common.FollowHandler;
 import net.smileycorp.followme.common.FollowMe;
@@ -31,10 +31,10 @@ public class FollowUserGoal extends Goal {
 	protected int timeToRecalcPath = 0;
 
 	public FollowUserGoal(Mob entity, LivingEntity user) {
-		this.entity=entity;
-		this.user=user;
-		level=entity.level();
-		pather=entity.getNavigation();
+		this.entity = entity;
+		this.user = user;
+		level = entity.level();
+		pather = entity.getNavigation();
 		setFlags(EnumSet.of(Goal.Flag.MOVE));
 	}
 
@@ -48,19 +48,19 @@ public class FollowUserGoal extends Goal {
 			else canUse = false;
 		}
 		//schedule removal of this ai
-		if(!canUse)FollowMe.DELAYED_THREAD_EXECUTOR.schedule(() -> FollowHandler.removeAI(this), 20, TimeUnit.MILLISECONDS);
+		if(!canUse) FollowMe.DELAYED_THREAD_EXECUTOR.schedule(() -> FollowHandler.removeAI(this), 20, TimeUnit.MILLISECONDS);
 		return canUse;
 	}
 
 	@Override
 	public void start() {
-		waterCost = entity.getPathfindingMalus(BlockPathTypes.WATER);
+		waterCost = entity.getPathfindingMalus(PathType.WATER);
 	}
 
 	@Override
 	public void stop() {
 		pather.stop();
-		entity.setPathfindingMalus(BlockPathTypes.WATER, waterCost);
+		entity.setPathfindingMalus(PathType.WATER, waterCost);
 	}
 
 	@Override
@@ -68,37 +68,32 @@ public class FollowUserGoal extends Goal {
 		if (--timeToRecalcPath <= 0)  {
 			timeToRecalcPath = 5;
 			if (entity.distanceTo(user) > min) {
-				Vec3 dir = DirectionUtils.getDirectionVecXZ(user, entity);
+				Vec3 dir = VecMath.directionXZ(user, entity);
 				Path path = pather.createPath(user.blockPosition().offset((int) Math.round(dir.x), 0, (int) Math.round(dir.z)), 1);
 				pather.moveTo(path, 0.75);
 			}
 		}
-		if (CommonConfigHandler.shouldTeleport.get()) {
-			if (entity.distanceTo(user) >= max) {
-				if (!entity.isLeashed() && entity.getVehicle() == null) {
-					Vec3 dir = DirectionUtils.getDirectionVecXZ(user, entity);
-					int x = (int) (Math.round(user.getX() + 2*dir.x));
-					int y = (int) (Math.round(user.getY()));
-					int z = (int) (Math.round(user.getZ() + 2*dir.z));
-					RandomSource rand = level.random;
-					for (int l = 0; l <= 10; ++l) {
-						int i = rand.nextInt(7)-3;
-						int j = rand.nextInt(3)-1;
-						int k = rand.nextInt(7)-3;
-						BlockPos pos = new BlockPos((int)(x+i + 0.5), (int) (y+j + 0.5), (int) (z+k + 0.5));
-						if (canTeleportTo(pos)) {
-							entity.moveTo(pos.getX(), pos.getY(), pos.getZ());
-							pather.stop();
-						}
-					}
+		if (CommonConfigHandler.shouldTeleport.get() && entity.distanceTo(user) >= max &! entity.isLeashed() && entity.getVehicle() == null) {
+			Vec3 dir = VecMath.directionXZ(user, entity);
+			int x = (int) (Math.round(user.getX() + 2*dir.x));
+			int y = (int) (Math.round(user.getY()));
+			int z = (int) (Math.round(user.getZ() + 2*dir.z));
+			RandomSource rand = level.random;
+			for (int l = 0; l <= 10; ++l) {
+				int i = rand.nextInt(7)-3;
+				int j = rand.nextInt(3)-1;
+				int k = rand.nextInt(7)-3;
+				BlockPos pos = new BlockPos((int)(x+i + 0.5), (int) (y+j + 0.5), (int) (z+k + 0.5));
+				if (canTeleportTo(pos)) {
+					entity.moveTo(pos.getX(), pos.getY(), pos.getZ());
+					pather.stop();
 				}
 			}
 		}
 	}
 
 	private boolean canTeleportTo(BlockPos pos) {
-		BlockPathTypes pathnodetype = WalkNodeEvaluator.getBlockPathTypeStatic(level, pos.mutable());
-		if (pathnodetype != BlockPathTypes.WALKABLE) return false;
+		if (WalkNodeEvaluator.getPathTypeStatic(entity, pos.mutable()) != PathType.WALKABLE) return false;
 		BlockPos blockpos = pos.subtract(entity.blockPosition());
 		return !level.noCollision(entity, entity.getBoundingBox().move(blockpos));
 	}

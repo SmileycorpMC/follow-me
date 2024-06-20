@@ -1,0 +1,33 @@
+modLoader="javafml" #mandatory
+loaderVersion="${loader_version_range}"
+license="GNU LESSER GENERAL PUBLIC LICENSE Version 2.1"
+
+[[mods]]
+	modId="followme"
+	version="${mod_version}"
+	displayName="Follow Me"
+	displayURL="https://www.curseforge.com/minecraft/mc-mods/follow-me" #optional
+	updateJSONURL="https://raw.githubusercontent.com/SmileycorpMC/follow-me/1.21/update.json"
+	credits="Smileycorp" #optional
+	authors="Smileycorp" #optional
+	description=""
+	
+[[dependencies.followme]]
+    modId="minecraft"
+    type="required"
+    versionRange="${minecraft_version}"
+    side="BOTH"
+[[dependencies.followme]]
+    modId="neoforge"
+    type="required"
+    versionRange="${neo_version}"
+    side="BOTH"
+	
+[[dependencies.followme]]
+    modId="atlaslib"
+    type="required"
+    versionRange="1.21.0-1.1.14"
+    side="BOTH"
+
+[[accessTransformers]]
+	file="META-INF/accesstransformer.cfg"

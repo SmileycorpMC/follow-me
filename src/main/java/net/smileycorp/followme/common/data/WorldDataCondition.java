@@ -4,7 +4,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraftforge.server.ServerLifecycleHooks;
 import net.smileycorp.atlas.api.data.ComparableOperation;
 import net.smileycorp.atlas.api.data.NBTExplorer;
 
@@ -17,7 +16,7 @@ public class WorldDataCondition<T extends Comparable<T>> extends NBTDataConditio
 
 	@Override
 	protected CompoundTag writeNBT(Mob entity, LivingEntity player) {
-		MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+		MinecraftServer server = player.getServer();
 		CompoundTag nbt = server.getWorldData().createTag(server.registryAccess(), new CompoundTag());
 		return nbt;
 	}

@@ -12,16 +12,14 @@ public class LogicalDataCondition implements DataCondition {
 	protected final LogicalOperation operation;
 
 	public LogicalDataCondition(LogicalOperation operation, List<DataCondition> conditions) {
-		this.operation=operation;
-		subConditions=conditions;
+		this.operation = operation;
+		subConditions = conditions;
 	}
 
 	@Override
 	public boolean matches(Mob entity, LivingEntity player) {
 		boolean result = false;
-		for (DataCondition condition : subConditions) {
-			result = operation.apply(result, condition.matches(entity, player));
-		}
+		for (DataCondition condition : subConditions) result = operation.apply(result, condition.matches(entity, player));
 		return result;
 	}
 

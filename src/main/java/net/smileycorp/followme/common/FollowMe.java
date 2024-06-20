@@ -1,75 +1,63 @@
 package net.smileycorp.followme.common;
 
-import net.minecraft.world.entity.Entity;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.CapabilityToken;
-import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.smileycorp.atlas.api.FileLogger;
 import net.smileycorp.followme.client.ClientConfigHandler;
 import net.smileycorp.followme.client.ClientHandler;
-import net.smileycorp.followme.common.capability.IFollower;
+import net.smileycorp.followme.common.capability.Follower;
 import net.smileycorp.followme.common.network.PacketHandler;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 @Mod(value = Constants.MODID)
-@Mod.EventBusSubscriber(modid = Constants.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = Constants.MODID, bus = EventBusSubscriber.Bus.MOD)
 public class FollowMe {
 
 	public static ScheduledExecutorService DELAYED_THREAD_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-	private static Logger logger = LogManager.getLogger(Constants.NAME);
-
-	public static Capability<IFollower> FOLLOW_CAPABILITY = CapabilityManager.get(new CapabilityToken<IFollower>(){});
-
-	public FollowMe() {
-		MinecraftForge.EVENT_BUS.register(this);
-		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CommonConfigHandler.config);
-		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfigHandler.config);
+	private static final FileLogger LOGGER = new FileLogger(Constants.MODID);
+	
+	public FollowMe(ModContainer container, IEventBus bus) {
+		LOGGER.clearLog();
+		container.registerConfig(ModConfig.Type.COMMON, CommonConfigHandler.config);
+		container.registerConfig(ModConfig.Type.CLIENT, ClientConfigHandler.config);
+		bus.addListener(PacketHandler::initPackets);
 	}
-
-	@SubscribeEvent
-	public void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.register(IFollower.class);
-	}
-
-	@SubscribeEvent
-	public void attachEntityCapabilities(AttachCapabilitiesEvent<Entity> event) {
-		Entity entity = event.getObject();
-		if (entity instanceof Mob) {
-			event.addCapability(Constants.loc("follower"), new IFollower.Provider((Mob)entity));
-		}
-	}
-
+	
 	@SubscribeEvent
 	public static void clientSetup(FMLClientSetupEvent event){
-		MinecraftForge.EVENT_BUS.register(new ClientHandler());
+		NeoForge.EVENT_BUS.register(new ClientHandler());
 	}
 
 	@SubscribeEvent
 	public static void setup(FMLCommonSetupEvent event){
-		MinecraftForge.EVENT_BUS.register(new EventListener());
-		PacketHandler.initPackets();
+		NeoForge.EVENT_BUS.register(new EventListener());
+	}
+	
+	@SubscribeEvent
+	public static void attachCapabilities(RegisterCapabilitiesEvent event) {
+		for (EntityType type : BuiltInRegistries.ENTITY_TYPE) if (Mob.class.isAssignableFrom(type.getBaseClass()))
+			event.registerEntity(FollowHandler.CAPABILITY, type, (entity, ctx) -> new Follower.Impl((Mob) entity));
 	}
 
 	public static void logInfo(Object message) {
-		logger.info(message);
+		LOGGER.logInfo(message);
 	}
 
 	public static void logError(Object message, Exception e) {
-		logger.error(message);
-		e.printStackTrace();
+		LOGGER.logError(message, e);
 	}
 
 }

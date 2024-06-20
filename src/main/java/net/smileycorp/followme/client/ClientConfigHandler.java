@@ -2,23 +2,22 @@ package net.smileycorp.followme.client;
 
 import com.google.common.collect.Lists;
 import net.minecraft.network.chat.TextColor;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.List;
 
 public class ClientConfigHandler {
-
-	public static final ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
-	public static final ForgeConfigSpec config;
+	
+	public static final ModConfigSpec config;
 
 	private static TextColor followMessageColour = null;
 
-	public static ConfigValue<Integer> followRenderMode;
-	private static ConfigValue<List<? extends Integer>> configFollowMessageColour;
-	public static ConfigValue<Boolean> followMessageUseTeamColour;
+	public static ModConfigSpec.ConfigValue<Integer> followRenderMode;
+	private static ModConfigSpec.ConfigValue<List<? extends Integer>> configFollowMessageColour;
+	public static ModConfigSpec.ConfigValue<Boolean> followMessageUseTeamColour;
 
 	static {
+		ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 		builder.push("general");
 		followRenderMode = builder.comment("How to show an entity is following the player (0: no rendering, 1 message below nameplate")
 				.define("followRenderMode", 1);
@@ -38,4 +37,5 @@ public class ClientConfigHandler {
 		}
 		return followMessageColour;
 	}
+	
 }
