@@ -97,8 +97,7 @@ repositories {
 
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
-	//implementation fg.deobf('curse.maven:atlaslib-463826:5444504')
-	implementation fileTree(dir: 'libs', include: ['*.jar'])
+	implementation fg.deobf('curse.maven:atlaslib-463826:5444504')
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
